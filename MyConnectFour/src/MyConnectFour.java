@@ -12,7 +12,7 @@ public class MyConnectFour {
 	 * @param column the column in which a piece is being dropped in
 	 * @param player the player that is placing the piece (1 or 2)
 	 */
-	public static void move(int[][] grid, int column, int player) {
+	public static boolean move(int[][] grid, int column, int player) {
 		int gamePiece = -1;
 		boolean changed = false;
 		if(player == 1) {
@@ -32,6 +32,7 @@ public class MyConnectFour {
 		if (changed == false) {
 			System.out.println("Invalid move");
 		}
+		return changed;
 	}
 	
 	/**
@@ -72,35 +73,27 @@ public class MyConnectFour {
 			for (int j = 0; j < grid.length; j++) {
 				try {
 					if (grid[i][j] * grid[i][j + 1] * grid[i][j + 2] * grid[i][j + 3] == 1) {
-						System.out.println("player 1 wins");
 						winner = 1;
 						break;
 					} else if (grid[i][j] * grid[i][j + 1] * grid[i][j + 2] * grid[i][j + 3] == 16) {
-						System.out.println("player 2 wins");
 						winner = 2;
 						break;
 					} else if (grid[i][j] * grid[i + 1][j] * grid[i + 2][j] * grid[i + 3][j] == 1) {
-						System.out.println("player 1 wins");
 						winner = 1;
 						break;
 					} else if (grid[i][j] * grid[i + 1][j] * grid[i + 2][j] * grid[i + 3][j] == 16) {
-						System.out.println("player 2 wins");
 						winner = 2;
 						break;
 					} else if (grid[i][j] * grid[i + 1][j + 1] * grid[i + 2][j + 2] * grid[i + 3][j + 3] == 1) {
-						System.out.println("player 1 wins");
 						winner = 1;
 						break;
 					} else if (grid[i][j] * grid[i + 1][j + 1] * grid[i + 2][j + 2] * grid[i + 3][j + 3] == 16) {
-						System.out.println("player 2 wins");
 						winner = 2;
 						break;
 					} else if (grid[i][j] * grid[i - 1][j + 1] * grid[i - 2][j + 2] * grid[i - 3][j + 3] == 1) {
-						System.out.println("player 1 wins");
 						winner = 1;
 						break;
 					} else if (grid[i][j] * grid[i - 1][j + 1] * grid[i - 2][j + 2] * grid[i - 3][j + 3] == 16) {
-						System.out.println("player 2 wins");
 						winner = 2;
 						break;
 					}
@@ -112,24 +105,29 @@ public class MyConnectFour {
 		return winner;
 	}
 	
+	/**
+	 * Runs a match where two randomly behaving players play each other
+	 * @return an array 
+	 * index 0 is the winner
+	 * index 1 is the number of turns it took 
+	 */
 	public static int[] runRandom() {
 		int[][] gameGrid = new int[8][8];
 		initGrid(gameGrid);
 		Scanner scan = new Scanner(System.in);
-		int next;
+		int next = 0;
 		int player = 1;
 		int winner = 0;
-		int numTurns = 0;
-
-		printGrid(gameGrid);
-		
+		int numTurns = 0;		
+		boolean validMove = false;
 		while(true) {
-			next = ThreadLocalRandom.current().nextInt(0, gameGrid.length);
 			
 			if (next < gameGrid.length) {
-				move(gameGrid, next, player);
-				printGrid(gameGrid);
-				System.out.println("=====");
+				while (!validMove) {
+					next = ThreadLocalRandom.current().nextInt(0, gameGrid.length);
+					validMove = move(gameGrid, next, player);
+				}
+				validMove = false;
 				winner = evaluate(gameGrid);
 				numTurns++;
 			}
@@ -141,20 +139,16 @@ public class MyConnectFour {
 			}
 			
 			if (winner > 0) {
-				System.out.println("number of turns it took to finish: " + numTurns);
+				printGrid(gameGrid);
+				System.out.println("=====");
 				break;
 			}
 		}
-		int returnArray[] = new int[2];
-		returnArray[0] = winner;
-		returnArray[1] = numTurns;
+		int returnArray[] = {winner, numTurns};
 		return returnArray;
 	}
 	
-	/**
-	 * Pits two players that place pieces randomly against each other. Finishes when a player wins
-	 * @param args
-	 */
+
 	public static void main(String[] args) {
 		int[] result;
 		int numP1Wins = 0;
