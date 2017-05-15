@@ -34,6 +34,10 @@ public class MyConnectFour {
 		}
 	}
 	
+	/**
+	 * Prints the game board. 0 is empty, 1 is player one's pieces, 2 is player two's pieces.
+	 * @param grid game board
+	 */
 	public static void printGrid(int[][] grid){
 		for (int i = grid.length - 1; i >= 0; i--) {
 			for (int j = 0; j < grid.length; j ++) {
@@ -43,6 +47,10 @@ public class MyConnectFour {
 		}
 	}
 	
+	/**
+	 * initializes the game grid to have 0s for all of its slots
+	 * @param grid game board
+	 */
 	public static void initGrid(int[][] grid) {
 		for (int i = 0; i < grid.length; i ++) {
 			for (int j = 0; j < grid.length; j ++) {
@@ -51,6 +59,13 @@ public class MyConnectFour {
 		}
 	}
 	
+	/**
+	 * Examines a game grid and determines if either player won. 
+	 * Looks at rows of four in horizontal, vertical, and diagonal directions
+	 * Not sure if algorithm is completely right, but it has worked so far.
+	 * @param grid game board
+	 * @return 0 if no winners, 1 if player 1 wins, 2 if player 2
+	 */
 	public static int evaluate(int[][] grid) {
 		int winner = 0;
 		for (int i = 0; i < grid.length ; i++) {
@@ -97,23 +112,18 @@ public class MyConnectFour {
 		return winner;
 	}
 	
-	
-	public static void main(String[] args) {
+	public static int[] runRandom() {
 		int[][] gameGrid = new int[8][8];
 		initGrid(gameGrid);
 		Scanner scan = new Scanner(System.in);
 		int next;
 		int player = 1;
 		int winner = 0;
-//		int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
 		int numTurns = 0;
 
-		
 		printGrid(gameGrid);
 		
 		while(true) {
-			
-//			next = scan.nextInt();
 			next = ThreadLocalRandom.current().nextInt(0, gameGrid.length);
 			
 			if (next < gameGrid.length) {
@@ -135,5 +145,34 @@ public class MyConnectFour {
 				break;
 			}
 		}
+		int returnArray[] = new int[2];
+		returnArray[0] = winner;
+		returnArray[1] = numTurns;
+		return returnArray;
+	}
+	
+	/**
+	 * Pits two players that place pieces randomly against each other. Finishes when a player wins
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		int[] result;
+		int numP1Wins = 0;
+		int numP2Wins = 0;
+		double avgNumTurns = 0;
+		int numTests = 100;
+		for (int i = 0; i < numTests; i++) {
+			result = runRandom();
+			if (result[0] == 1) {
+				numP1Wins++;
+			} else if (result[0] == 2) {
+				numP2Wins++;
+			}
+			avgNumTurns += result[1];
+		}
+		avgNumTurns = avgNumTurns / numTests;
+		System.out.println("Player 1 wins: " + numP1Wins);
+		System.out.println("Player 2 wins: " + numP2Wins);
+		System.out.println("Average number of turns to finish a game: " + avgNumTurns);
 	}
 }
