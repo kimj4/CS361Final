@@ -5,7 +5,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 
 public class MyConnectFour {
-
 	/**
 	 * Function that processes one move in a connect four game. Changes the state of the board that it is given
 	 * @param grid the game grid

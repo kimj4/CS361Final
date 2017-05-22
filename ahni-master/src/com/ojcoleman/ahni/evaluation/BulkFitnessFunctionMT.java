@@ -56,13 +56,13 @@ import com.ojcoleman.ahni.util.Parallel.Operation;
  * Transcription and evaluation may be performed by a cluster of computers using the "minion" system. In a minion set-up
  * the initial instance of AHNI controls one or more minion instances and doesn't perform any transcriptions or
  * evaluations itself. The controller and minions communicate via sockets, with each minion instance acting as a server
- * which waits for requests from the controlling instance The controller automatically load-balances between the minions 
+ * which waits for requests from the controlling instance The controller automatically load-balances between the minions
  * and is robust to minions failing. See {@link #MINION_HOSTS}.
  * </p>
  * <p>
  * See {@link com.ojcoleman.ahni.evaluation.TargetFitnessFunctionMT} for an example.
  * </p>
- * 
+ *
  * @author Oliver Coleman
  */
 public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implements Configurable {
@@ -105,8 +105,8 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * Default is false.
 	 */
 	public static final String FORCE_PERF_FITNESS = "fitness.function.performance.force.fitness";
-	
-	
+
+
 	/**
 	 * <p>A comma-separated list of host names and ports of minion instances. A user name must be prepended if
 	 * minion.autostart is enabled, in which case the user name is used during the ssh login to the minion machine. A
@@ -116,30 +116,30 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * in the definition. If no port is specified then minion.default_port will be used. Minions create a log file
 	 * called &lt;output.dir&gt;/minion.&lt;hostname&gt;.log relative to the file system on the machine they're running
 	 * on.</p>
-	 * <p>Alternatively this can be set to "[htcondor]" to indicate that Minions should be managed by HTCondor. Use of  
-	 * HTCondor forces minion.autostart=TRUE. NOTE: use of HTCondor was an experiment that couldn't be completed due 
-	 * to the restrictions of the HT Condor system available for testing. There's no technical reason it shouldn't work, 
+	 * <p>Alternatively this can be set to "[htcondor]" to indicate that Minions should be managed by HTCondor. Use of
+	 * HTCondor forces minion.autostart=TRUE. NOTE: use of HTCondor was an experiment that couldn't be completed due
+	 * to the restrictions of the HT Condor system available for testing. There's no technical reason it shouldn't work,
 	 * so you can try it out, but keep in mind that it hasn't been properly tested.</p>
 	 */
 	public static final String MINION_HOSTS = "minion.hosts";
-	
+
 	/**
 	 * <p>On *nix machines the controlling instance can optionally automatically launch - via ssh commands - minion
 	 * instances configured to serve it, restarting minion instances if they die (for example if a machine is reset). If
 	 * this is enabled then the minion instances will be automatically terminated when the controlling instance
 	 * terminates.<p>
-	 * <p>Alternatively Minions can be manually started with a command like 
+	 * <p>Alternatively Minions can be manually started with a command like
 	 * <em>java -cp &lt;jar file(s)&gt; com.ojcoleman.ahni.evaluation.Minion --port 1234 --log logfilename</em></p>
 	 * <p>This setting has no effect if minion.hosts is set to "[htcondor]".</p>
 	 */
 	public static final String MINION_AUTOSTART = "minion.autostart";
-	
+
 	/**
 	 * The default port for minion instances.
 	 */
 	public static final String MINION_DEFAULT_PORT = "minion.default_port";
 
-	
+
 	protected Properties props;
 	protected Transcriber<Activator> transcriber;
 	protected int numThreads;
@@ -156,7 +156,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	protected NoveltySearch[] noveltyArchives;
 	protected boolean forcePerfFitness;
 	protected ArrayList<MinionHandler> minions = null;
-	
+
 	/**
 	 * This RNG should be used by all sub-classes for all randomness.
 	 */
@@ -196,7 +196,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	protected CircularFifoBuffer<Double> bestPerformances;
 
 	private boolean renderedNoveltyArchivesThisGeneration;
-	
+
 	/**
 	 * Indicates if this instantiation is for in a minion instance.
 	 * @see Minion
@@ -206,7 +206,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	/**
 	 * Subclasses may override this method to perform initialise tasks. <strong>Make sure to call this method from the
 	 * overriding method, typically at the end of it</strong>.
-	 * 
+	 *
 	 * @param props Configuration parameters, typically read from the/a properties file.
 	 */
 	public void init(Properties props) {
@@ -232,7 +232,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 			numThreads = minThreads;
 		if (maxThreads > 0 && numThreads > maxThreads)
 			numThreads = maxThreads;
-		
+
 		EvaluatorGroup eg = new EvaluatorGroup(this.getClass().getSimpleName() + " evaluators");
 		logger.info("Using " + numThreads + " threads for transcription and evaluation.");
 		evaluators = new Evaluator[numThreads];
@@ -240,13 +240,13 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 			evaluators[i] = new Evaluator(i, eg);
 			evaluators[i].start();
 		}
-		
+
 		String[] minionHosts = props.getStringArrayProperty(MINION_HOSTS, null);
 		if (minionHosts != null) {
 			int defaultPort = props.getIntProperty(MINION_DEFAULT_PORT, 5000);
 			minions = new ArrayList<MinionHandler>();
 			boolean usingCondor = minionHosts[0].startsWith("[htcondor:");
-			
+
 			// If we're to use HTCondor to launch Minions.
 			if (usingCondor) {
 				int minionCount = 0;
@@ -261,7 +261,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 				if (minionCount <= 0) {
 					throw new IllegalArgumentException("The number of Minions to launch via HTCondor has not been correctly specified in " + minionHosts[0]);
 				}
-				
+
 				for (int mi = 0; mi < minionCount; mi++) {
 					try {
 						MinionHandler inst = new MinionHandlerCondor(this, defaultPort);
@@ -287,7 +287,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 							throw new IllegalArgumentException("The end of the numeric host range must not be less than the start in " + hostDef);
 						}
 						expandedHostDefs = new String[end - start + 1];
-						
+
 						String prefix = m.group(1);
 						String postfix = m.group(4);
 						String format = "%0" + startStr.length() + "d";
@@ -310,13 +310,13 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 				}
 			}
 			logger.info("Using " + minions.size() + " Minions for transcription and evaluation.");
-			
+
 			if (usingCondor || props.getBooleanProperty(MINION_AUTOSTART, false)) {
 				Runtime.getRuntime().addShutdownHook(new Thread() {
 		            @Override
 		            public void run() {
 		            	(new File(System.getProperty("user.dir") + "/ahni-start-minion.sh")).delete();
-		            	
+
 		            	logger.info("Sending terminate signal to all minions.");
 		            	for (MinionHandler minion : minions) {
 		            		minion.dispose();
@@ -325,7 +325,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 		        });
 			}
 		}
-	
+
 		int fitnessObjectiveCount = fitnessObjectivesCount();
 		noveltyObjectiveCount = noveltyObjectiveCount();
 
@@ -381,7 +381,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 		logger.info("Normalised fitness function weightings: " + Arrays.toString(multiFitnessFunctionWeights));
 
 		isMinionInstance = props.getBooleanProperty(Minion.MINION_INSTANCE, false);
-		
+
 		if (!isMinionInstance && noveltyObjectiveCount > 0) {
 			logger.info("Creating " + noveltyObjectiveCount + " novelty search archive(s).");
 			noveltyArchives = new NoveltySearch[noveltyObjectiveCount];
@@ -392,14 +392,14 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 
 		forcePerfFitness = props.getBooleanProperty(FORCE_PERF_FITNESS, false);
 	}
-	
+
 	/**
 	 * Calls {@link #initialiseEvaluation()} on this and all secondary fitness functions.
 	 */
 	void initialiseEvaluationOnAll() {
 		transcriber = (Transcriber) props.singletonObjectProperty(ActivatorTranscriber.TRANSCRIBER_KEY);
 		bestPerformance = targetPerformanceType == 1 ? 0 : Float.MAX_VALUE;
-		
+
 		initialiseEvaluation();
 		for (BulkFitnessFunctionMT f : multiFitnessFunctions) {
 			f.initialiseEvaluation();
@@ -425,7 +425,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * This is akin to {@link #getNoveltyObjectiveCount()} but allows for handling multiple fitness functions, some of
 	 * which may define multiple novelty objectives. Subclasses that support novelty search should override this method
 	 * and return the number of behaviours this fitness function defines. This default implementation returns 0.
-	 * 
+	 *
 	 * @see com.ojcoleman.ahni.evaluation.novelty.NoveltySearch
 	 * @see #fitnessObjectivesCount()
 	 */
@@ -439,7 +439,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * one fitness objective, or no fitness objectives (eg only a novelty objective), then this method must be
 	 * overridden to return the number of fitness objectives defined. NOTE: unlike {@link #getObjectiveCount()} this
 	 * method should not include the number of novelty objectives.
-	 * 
+	 *
 	 * @see #noveltyObjectiveCount()
 	 */
 	public int fitnessObjectivesCount() {
@@ -469,7 +469,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * This implementation is set as final to allow this class to make use of multiple separate fitness functions for a
 	 * multi-objective setup.
 	 * </p>
-	 * 
+	 *
 	 * @see #fitnessObjectivesCount()
 	 * @see #noveltyObjectiveCount()
 	 */
@@ -484,7 +484,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * This implementation is set as final to allow this class to make use of multiple separate fitness functions for a
 	 * multi-objective setup.
 	 * </p>
-	 * 
+	 *
 	 * @see #fitnessObjectivesCount()
 	 * @see #noveltyObjectiveCount()
 	 */
@@ -499,7 +499,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * This implementation is set as final to allow this class to make use of multiple separate fitness functions for a
 	 * multi-objective setup.
 	 * </p>
-	 * 
+	 *
 	 * @see #fitnessObjectivesCount()
 	 * @see #noveltyObjectiveCount()
 	 */
@@ -512,7 +512,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * If the fitness value(s) and behaviour(s) for novelty search (if used) for this fitness function do not change
 	 * between generations then subclasses should override this method to return true in order to avoid unnecessarily
 	 * recalculating the fitness value(s) or behaviour(s). This default implementation returns false.
-	 * 
+	 *
 	 * @see #fitnessObjectivesCount()
 	 */
 	public boolean fitnessValuesStable() {
@@ -521,30 +521,30 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 
 	/**
 	 * Evaluate a set of chromosomes.
-	 * 
+	 *
 	 * @param genotypes The set of chromosomes to evaluate.
 	 */
 	@Override
 	public void evaluate(List<Chromosome> genotypes) {
 		assert !isMinionInstance;
-		
+
 		initialiseEvaluationOnAll();
-		
+
 		if (minions != null) {
 			evaluateFitnessViaMinions(genotypes);
 		}
 		else {
 			evaluateFitnessMT(genotypes);
 		}
-		
+
 		if (noveltyArchives != null) {
 			evaluateNoveltyMT(genotypes);
 		}
-		
+
 		for (Chromosome chrom : genotypes) {
 			finaliseEvaluation(chrom);
-		} 
-		
+		}
+
 		lastBestChrom = newBestChrom;
 		lastBestPerformance = bestPerformance;
 
@@ -567,7 +567,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 
 		renderedNoveltyArchivesThisGeneration = false;
 	}
-	
+
 	void evaluateFitnessMT(List<Chromosome> genotypes) {
 		// Evaluate fitness/performance over all individuals.
 		chromosomesIterator = genotypes.iterator();
@@ -586,15 +586,15 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 			}
 		}
 	}
-	
+
 	private void evaluateFitnessViaMinions(List<Chromosome> genotypes) {
 		assert !isMinionInstance;
-		
+
 		List<Chromosome> stillToEvaluate = new ArrayList<Chromosome>(genotypes);
-		
+
 		long startTime = System.currentTimeMillis();
 		while (!stillToEvaluate.isEmpty()) {
-			// For each minion, update generation number, initialise evaluation in fitness functions, and check if it's still active. 
+			// For each minion, update generation number, initialise evaluation in fitness functions, and check if it's still active.
 			ArrayList<MinionHandler> activeMinions = new ArrayList<MinionHandler>();
 			ArrayDoubleList relativePerformanceList = new ArrayDoubleList();
 			double avgPerformance = 0;
@@ -616,11 +616,11 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 				}
 			}
 			avgPerformance /= avgPerformanceCount;
-			
+
 			// Assign chromosomes to Minions proportional to their observed performance.
 			double[] relativePerformance = relativePerformanceList.toArray();
 			if (avgPerformanceCount == 0) avgPerformance = 1;
-			// If any Minions have not yet had their performance calculated, assign them an average performance value. 
+			// If any Minions have not yet had their performance calculated, assign them an average performance value.
 			for (int i = 0; i < relativePerformance.length; i++) {
 				if (relativePerformance[i] == 0) {
 					relativePerformance[i] = avgPerformance;
@@ -639,7 +639,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 				chromIndex = nextChromIndex;
 				minionIndex++;
 			}
-			
+
 			// Start evaluation on all active minions.
 			Parallel.foreach(activeMinions, activeMinions.size(), new Operation<MinionHandler>() {
 				@Override
@@ -647,8 +647,8 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 					minion.evaluateChroms();
 				}
 			});
-			
-			// Check if evaluation was successful for each minion, compile 
+
+			// Check if evaluation was successful for each minion, compile
 			// list of chromosomes still to evaluate if any minions failed.
 			stillToEvaluate.clear();
 			int failCount = 0, activeMinionCount = activeMinions.size();
@@ -668,20 +668,20 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 			}
 		}
 	}
-	
-	// Evaluate novelty over all individuals (this must be done after fitness/performance evaluation is complete for 
+
+	// Evaluate novelty over all individuals (this must be done after fitness/performance evaluation is complete for
 	// all members of the population so that we have the behaviour record of every individual in the population.
 	// For this reason novelty is not evaluated via Minions.
 	private void evaluateNoveltyMT(List<Chromosome> genotypes) {
 		assert !isMinionInstance;
-		
+
 		for (Chromosome chrom : genotypes) {
 			for (int n = 0; n < noveltyObjectiveCount; n++) {
 				assert chrom.behaviours[n] != null;
 				noveltyArchives[n].addToCurrentPopulation(chrom.behaviours[n]);
 			}
 		}
-		
+
 		chromosomesIterator = genotypes.iterator();
 		evaluatorsFinishedCount = 0;
 		for (Evaluator ev : evaluators)
@@ -706,10 +706,10 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 		// avgArchiveSize /= noveltyArchives.length;
 		// logger.info("aas: " + avgArchiveSize);
 	}
-	
+
 	private void finaliseEvaluation(Chromosome chrom) {
 		assert !isMinionInstance;
-		
+
 		// We just set the overall fitness value according to the weightings. A different
 		// selector (eg NSGA-II selector) may set the overall fitness to something else
 		// based on the multiple objectives.
@@ -759,7 +759,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * more simply state variables can be instantiated within the method. The total number of threads is
 	 * {@link #numThreads}.
 	 * <p>
-	 * 
+	 *
 	 * @param genotype the genotype being evaluated. This is not usually required but may be useful in some cases.
 	 * @param substrate the phenotypic substrate of the genotype being evaluated.
 	 * @param evalThreadIndex The index of the evaluator thread. This is not usually required but may be useful in some
@@ -788,7 +788,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * more simply state variables can be instantiated within the method. The total number of threads is
 	 * {@link #numThreads}.
 	 * <p>
-	 * 
+	 *
 	 * @param genotype the genotype being evaluated. This is not usually required but may be useful in some cases.
 	 * @param substrate the phenotypic substrate of the genotype being evaluated.
 	 * @param evalThreadIndex The index of the evaluator thread. This is not usually required but may be useful in some
@@ -816,7 +816,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	@Override
 	public final boolean evaluateGeneralisation(Chromosome genotype, Activator substrate, String baseFileName, boolean logText, boolean logImage) {
 		assert !isMinionInstance;
-		
+
 		boolean atLeastOneGeneralisationEval = false;
 		// Do secondary fitness functions first.
 		double[][] fitnessValues = new double[multiFitnessFunctions.length + 1][];
@@ -850,7 +850,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	 * fitness evaluations. The evaluation is not used for any purpose other than generating a record of the
 	 * generalisation performance of the given genotype. The function should set the performance values and fitness
 	 * values of the given Chromosome using the functions setFitnessValue(...) and setPerformanceValue(...).
-	 * 
+	 *
 	 * @param genotype the genotype being evaluated. This is not usually required but may be useful in some cases.
 	 * @param substrate the phenotypic substrate of the genotype being evaluated.
 	 * @param baseFileName The base/prefix of the names of log file(s) that should be created.
@@ -902,7 +902,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 		/**
 		 * Deletes the current substrate, a completely new one will be generated. This is useful for when a substrate
 		 * can be reused by the Transcriber, but sometimes needs to be completely regenerated.
-		 * 
+		 *
 		 * @see Transcriber#transcribe(Chromosome, Activator)
 		 */
 		protected void resetSubstrate() {
@@ -1065,7 +1065,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 	/**
 	 * A convenience method to generate a substrate from the given Chromosome using the configured transcriber for this
 	 * fitness function.
-	 * 
+	 *
 	 * @param chrom The Chromosome to generate the substrate from.
 	 * @param substrate If a substrate can be reused for efficiency reasons it can be supplied here, otherwise null may
 	 *            be given.
@@ -1085,7 +1085,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * This implementation will generate images for the novelty archive(s) if possible. If called multiple times in the
 	 * same generation it will only generate images the first time. If overridden, subclasses should call this method
 	 * from their own implementation.
@@ -1130,7 +1130,7 @@ public abstract class BulkFitnessFunctionMT extends AHNIFitnessFunction implemen
 
 	/**
 	 * Sub-classes may override this method to perform operations after a Chromosome has been evaluated.
-	 * 
+	 *
 	 * @param genotype the Chromosome that has been evaluated. It's fitness and performance will have been set.
 	 * @param substrate the network (activator), or phenotype, of the evaluated Chromosome.
 	 * @param evalThreadIndex The index of the evaluator thread. This is not usually required but may be useful in some
