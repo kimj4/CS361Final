@@ -34,13 +34,6 @@ run
 - gets a bunch of data from evolver
 - dispose() on evolver
 
-
-
-
-
-
-
-
 ==========================================================================
 ============================Notes on HyperNEATEvolver
 run
@@ -54,7 +47,6 @@ run
 ============================Notes on Genotype
 src.org.jgapcustomised.Genotype.java
 
-
 evolve
 - notes from method comment
     - performs one generation cycle
@@ -62,4 +54,3 @@ evolve
         - selects survivors
         - repopulates with offspring
         - mutates new population
-        - 

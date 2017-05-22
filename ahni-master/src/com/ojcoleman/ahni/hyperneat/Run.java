@@ -93,6 +93,7 @@ public class Run {
 	 */
 	public static void main(String[] args) {
 		try {
+			System.out.println("aaaaaaaa");
 			Run runner = new Run();
 			JCommander jcom = new JCommander(runner, args);
 			if (runner.propertiesFiles.isEmpty()) {
