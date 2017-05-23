@@ -49,15 +49,64 @@ public:
             }
         }
     }
+
+
+    // TODO: diagonal function is not quite correct
+    int evaluate() {
+		int winner = 0;
+		for (int i = 0; i < w ; i++) {
+			for (int j = 0; j < h; j++) {
+				if (gameBoard[i][j] * gameBoard[i][j + 1] * gameBoard[i][j + 2] * gameBoard[i][j + 3] == 1) {
+					winner = 1;
+					break;
+				} else if (gameBoard[i][j] * gameBoard[i][j + 1] * gameBoard[i][j + 2] * gameBoard[i][j + 3] == 16) {
+					winner = 2;
+					break;
+				} else if (gameBoard[i][j] * gameBoard[i + 1][j] * gameBoard[i + 2][j] * gameBoard[i + 3][j] == 1) {
+					winner = 1;
+					break;
+				} else if (gameBoard[i][j] * gameBoard[i + 1][j] * gameBoard[i + 2][j] * gameBoard[i + 3][j] == 16) {
+					winner = 2;
+					break;
+				} else if (gameBoard[i][j] * gameBoard[i + 1][j + 1] * gameBoard[i + 2][j + 2] * gameBoard[i + 3][j + 3] == 1) {
+					winner = 1;
+					break;
+				} else if (gameBoard[i][j] * gameBoard[i + 1][j + 1] * gameBoard[i + 2][j + 2] * gameBoard[i + 3][j + 3] == 16) {
+					winner = 2;
+					break;
+				} else if (gameBoard[i][j] * gameBoard[i - 1][j + 1] * gameBoard[i - 2][j + 2] * gameBoard[i - 3][j + 3] == 1) {
+					winner = 1;
+					break;
+				} else if (gameBoard[i][j] * gameBoard[i - 1][j + 1] * gameBoard[i - 2][j + 2] * gameBoard[i - 3][j + 3] == 16) {
+					winner = 2;
+					break;
+				}
+			}
+		}
+		return winner;
+	}
 };
 
 
 int main() {
     Game myGame;
+    int curPlayer = 1;
+    int winner = 0;
     myGame.init();
     myGame.printGame();
-    int a;
-    std::cin >> a;
-    myGame.makeMove(1, a);
-    myGame.printGame();
+    int a = -1;
+
+    while (winner == 0) {
+        std::cin >> a;
+        myGame.makeMove(curPlayer, a);
+        myGame.printGame();
+        winner = myGame.evaluate();
+        if (curPlayer == 1) {
+            curPlayer = 2;
+        } else {
+            curPlayer = 1;
+        }
+
+    }
+    std::cout << "The winner is: " <<  winner << std::endl;
 }
