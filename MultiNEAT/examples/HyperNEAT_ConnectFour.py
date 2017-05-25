@@ -60,6 +60,7 @@ To evaluate an individual, pass in the population that it will match against.
 def evaluate(genome, population):
     # build the NN for the individual that we are evaluating.
     player1Net = NEAT.NeuralNetwork()
+    player1Net.SetInputOutputDimentions(2, 1)
     genome.BuildPhenotype(player1Net)
 
     p1FirstWins = 0
@@ -67,46 +68,62 @@ def evaluate(genome, population):
     p1FirstTies = 0
     p1SecondTies = 0
 
-
     # For now, play two rounds with each of the individuals in the population
     popGenomeList = NEAT.GetGenomeList(population)
     for p2Genome in popGenomeList:
         # build opponent NN
         player2Net = NEAT.NeuralNetwork()
+        player2Net.SetInputOutputDimentions(2, 1)
         p2Genome.BuildPhenotype(player2Net)
 
         winner = 0
+        game = MyConnectFour(1)
         # curPlayer = 1
         while (True):
             # make the game
-            game = MyConnectFour(1)
-            print(game.getPotentialDoubleGridsFlat(1))
-            break
+            makeMove(1,player1Net,game)
+            game.printGrid(game.grid)
+            outcome = game.getGameOutcome(game.grid)
+            if outcome!=0:
+                winner = outcome
+                break
+            makeMove(2,player2Net,game)
+            sys.stdout.write('.')
+            outcome = game.getGameOutcome(game.grid)
+            if outcome!=0:
+                winner = outcome
+                break
+        print(outcome)
+        if winner == 1:
+            p1FirstWins += 1
+        if winner == 3:
+            p1FirstTies += 1
 
-            # make move as p1
-                # to make move as p1
-                    # obtain all of the board representations of the pairs of
-
-            # see if someone won, if so, break
-            # make move as p2
-            # see if someone won, if so, break
-
-        # if p1 won the above round, p1FirstWins += 1
-        # if tied, p1FirstTies += 1
-
-        # while (true):
-            # make move as p2
-            # see if someone won, if so, break
-            # make move as p2
-            # see if someone won, if so, break
-        # if p1 won the above round, p1SecondWins += 1
-        # if tied, p1SecondTies += 1
-
-
+        winner = 0
+        game = MyConnectFour(1)
+        while (True):
+            # make the game
+            makeMove(2,player1Net,game)
+            sys.stdout.write('.')
+            outcome = game.getGameOutcome(game.grid)
+            if outcome!=0:
+                winner = outcome
+                break
+            makeMove(1,player2Net,game)
+            sys.stdout.write('.')
+            outcome = game.getGameOutcome(game.grid)
+            if outcome!=0:
+                winner = outcome
+                break
+        print(outcome)
+        if winner == 1:
+            p1SecondWins += 1
+        if winner == 3:
+            p1SecondTies += 1
     # let's input just one pattern to the net, activate it once and get the output
-    net.Input( [ 1.0, 0.0, 1.0 ] )
-    net.Activate()
-    output = net.Output()
+    # net.Input( [ 1.0, 0.0, 1.0 ] )
+    # net.Activate()
+    # output = net.Output()
 
     # the output can be used as any other Python iterable. For the purposes of the tutorial,
     # we will consider the fitness of the individual to be the neural network that outputs constantly
@@ -115,9 +132,50 @@ def evaluate(genome, population):
     # fitness = SOME FITNESS MEASURE FOR THE FIRST GENOME dependent on
     return 27
 
+def makeMove(player, playerNet, game):
+    playerPotentials = game.getPotentialDoubleGridsFlat(player)
+    outputList = []
+    for i in range(len(playerPotentials)):
+        listOfMinimums = []
+        if (isinstance(playerPotentials[i], list)):
+            for j in range(len(playerPotentials[i])):
+                if playerPotentials[i][j] != None:
+                    # print(playerPotentials[i][j])
+                    # game.printGrid(playerPotentials[i][j].getDoubleGrid())
+                    playerNet.Input(playerPotentials[i][j].makeIntoList())
+                    playerNet.Activate()
+                    # print("\n")
+                    for output in playerNet.Output():
+                        listOfMinimums.append(output)
+                        # print(output)
+                    # print("\n")
+
+        elif game.isDoubleGrid(playerPotentials[i]):
+            playerNet.Input(playerPotentials[i].makeIntoList())
+            playerNet.Activate()
+            # print("\n")
+            for output in playerNet.Output():
+                listOfMinimums.append(output)
+                # print(output)
+            # print("\n")
+        outputList.append(listOfMinimums)
+
+    bestIndexSoFar = -1
+    bestMinSoFar = -10000
+    for i in range(len(outputList)):
+        print(outputList[i])
+        if outputList[i] != [] and outputList[i] != None:
+            minimum = min(outputList[i])
+            if minimum > bestMinSoFar:
+                bestIndexSoFar = i
+                bestMinSoFar = minimum
+
+    game.actualMove(bestIndexSoFar, player)
+
 
 for a in NEAT.GetGenomeList(pop1):
     evaluate(a, pop2)
+    break
 ####### end added code
 
 
