@@ -56,6 +56,7 @@ To evaluate an individual, pass in the population that it will match against.
 - Consider some kind of sampling
 - Consider both cases: p1 goes first, p1 goes second
 '''
+
 def evaluate(genome, population):
     # build the NN for the individual that we are evaluating.
     player1Net = NEAT.NeuralNetwork()
@@ -71,15 +72,15 @@ def evaluate(genome, population):
     popGenomeList = NEAT.GetGenomeList(population)
     for p2Genome in popGenomeList:
         # build opponent NN
-        player2Net = NEAT.NeuralNetwork(p2Genome)
+        player2Net = NEAT.NeuralNetwork()
         p2Genome.BuildPhenotype(player2Net)
 
         winner = 0
         # curPlayer = 1
-        while (true):
+        while (True):
             # make the game
-            game = MyConnectFour()
-            game.getPotentialDoubleGridsFlat(1, game.grid, 2)
+            game = MyConnectFour(1)
+            print(game.getPotentialDoubleGridsFlat(1))
             break
 
             # make move as p1
@@ -114,6 +115,9 @@ def evaluate(genome, population):
     # fitness = SOME FITNESS MEASURE FOR THE FIRST GENOME dependent on
     return 27
 
+
+for a in NEAT.GetGenomeList(pop1):
+    evaluate(a, pop2)
 ####### end added code
 
 
@@ -285,5 +289,3 @@ def evaluate(genome, population):
 #
 # print('All:', gens)
 # print('Average:', avg_gens)
-
-evaluate()

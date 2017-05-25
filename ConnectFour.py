@@ -1,6 +1,6 @@
 import sys
 class MyConnectFour:
-	
+
 	def __init__(self,depth):
 		#self.grid = int[7][6]
 		self.grid = []
@@ -9,7 +9,7 @@ class MyConnectFour:
 			self.grid.append([])
 			for y in range(6):
 				self.grid[x].append(0)
-	
+
 	def move(self, grid, col, player):
 		changed = False
 		if player == 1:
@@ -19,20 +19,20 @@ class MyConnectFour:
 		else:
 			print("invalid player")
 			return False
-		
+
 		for y in range(6):
 			if grid[col][y] == 0:
 				grid[col][y] = piece
 				changed = True
 				break
 		return changed
-	
+
 	def actualMove(self, col, player):
 		return self.move(self.grid, col, player)
-		
+
 	def pretendMove(self, grid, col, player):
 		return self.move(grid, col, player)
-	
+
 	def printGrid(self, grid):
 		if not grid:
 			print("None")
@@ -44,10 +44,10 @@ class MyConnectFour:
 			for x in range(len(grid)):
 				line = line+" "+str(grid[x][y])
 			print(line)
-	
-	def convertToDoubleGrid(self, grid, player):	
+
+	def convertToDoubleGrid(self, grid, player):
 		return DoubleGrid(grid,player)
-	
+
 	def evaluate(self, grid):
 		for x in range(7):
 			for y in range(6):
@@ -79,7 +79,7 @@ class MyConnectFour:
 				except IndexError:
 					pass
 		return 0
-	
+
 	def getGameOutcome(self, grid):
 		winner = self.evaluate(grid)
 		if winner != 0:
@@ -88,7 +88,7 @@ class MyConnectFour:
 			if grid[x][5] == 0:
 				return 0
 		return 3
-	
+
 	def copyGrid(self, grid):
 		gridCopy = []
 		for x in range(7):
@@ -97,7 +97,7 @@ class MyConnectFour:
 				n = grid[x][y]
 				gridCopy[x].append(n)
 		return gridCopy
-	
+
 	def getPotentialDoubleGrids(self, player, grid, depth):
 		if depth == 0:
 			return self.convertToDoubleGrid(grid, player)
@@ -131,16 +131,16 @@ class MyConnectFour:
 							output[myMove].append(self.convertToDoubleGrid(gridCopy2, player))
 						else:
 							output[myMove].append(self.getPotentialDoubleGrids(player, gridCopy2, depth-2))
-							
+
 			return output
-							
+
 	def getPotentialDoubleGridsFlat(self, player):
-		originalList = self.getPotentialDoubleGrids(player, grid, self.depth)
+		originalList = self.getPotentialDoubleGrids(player, self.grid, self.depth)
 		newList = []
 		for i in range(len(originalList)):
 			newList.append(self.flatten(originalList[i]))
 		return newList
-	
+
 	def isDoubleGrid(self, source):
 		return isinstance(source, DoubleGrid)
 
@@ -151,7 +151,7 @@ class MyConnectFour:
 		#base case - if this is a doubleGrid
 		elif self.isDoubleGrid(source):
 			return source
-		
+
 		output = []
 		#flatten everything inside source
 		for i in range(len(source)):
@@ -163,7 +163,7 @@ class MyConnectFour:
 			else:
 				output.append(inner)
 		return output
-	
+
 	def printPotentials(self,potentials):
 		for i in range(len(potentials)):
 			if isinstance(potentials[i],list):
@@ -176,7 +176,7 @@ class MyConnectFour:
 				print("COL",i+1,":",1,"Possibilities")
 			else:
 				print("COL",i+1,":",0,"Possibilities")
-				
+
 	def play(self):
 		while True:
 			self.printGrid(self.grid)
@@ -212,14 +212,14 @@ class MyConnectFour:
 		self.printGrid(self.grid)
 
 class DoubleGrid():
-	
+
 	def __init__(self,grid,player):
 		self.doubleGrid = []
 		for x in range(14):
 			self.doubleGrid.append([])
 			for y in range(6):
 				self.doubleGrid[x].append(0)
-				
+
 		for x in range(7):
 			for y in range(6):
 				if grid[x][y]==1:
@@ -232,17 +232,17 @@ class DoubleGrid():
 						self.doubleGrid[x+7][y]=1
 					else:
 						self.doubleGrid[x][y]=1
-					
+
 	def getDoubleGrid(self):
 		return self.doubleGrid
-	
+
 	def getReverseDoubleGrid(self):
 		reverseGrid = []
 		for x in range(14):
 			reverseGrid.append([])
 			for y in range(6):
 				reverseGrid[x].append(0)
-				
+
 		for x in range(7):
 			for y in range(6):
 				if grid[x][y]==1:
@@ -255,14 +255,12 @@ class DoubleGrid():
 						reverseGrid[13-(x+7)][y]=1
 					else:
 						reverseGrid[13-x][y]=1
-				
-	
-def main():			
+
+
+def main():
 	depth = int(input("How many pairs of moves ahead would you like to compute?\nEnter an integer 1-3: "))
 	c4 = MyConnectFour(depth)
 	c4.play()
-	
+
 if __name__=="__main__":
 	main()
-					
-		
