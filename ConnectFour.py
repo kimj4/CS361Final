@@ -52,24 +52,28 @@ class MyConnectFour:
 			for y in range(6):
 				try:
 					vertical = grid[x][y]*grid[x][y+1]*grid[x][y+2]*grid[x][y+3]
-					if vertical == 1:
+					vertical2 = grid[x][y]+grid[x][y+1]+grid[x][y+2]+grid[x][y+3]
+					if vertical == 1 and vertical2 == 4:
 						return 1
-					elif vertical == 16:
+					elif vertical == 16 and vertical2 == 8:
 						return 2
 					horizontal = grid[x][y]*grid[x+1][y]*grid[x+2][y]*grid[x+3][y]
-					if horizontal == 1:
+					horizontal2 = grid[x][y]+grid[x+1][y]+grid[x+2][y]+grid[x+3][y]
+					if horizontal == 1 and horizontal2 == 4:
 						return 1
-					if horizontal == 16:
+					if horizontal == 16 and horizontal2 == 8:
 						return 2
 					diagonalFirst = grid[x][y]*grid[x+1][y+1]*grid[x+2][y+2]*grid[x+3][y+3]
-					if diagonalFirst == 1:
+					diagonalFirst2 = grid[x][y]+grid[x+1][y+1]+grid[x+2][y+2]+grid[x+3][y+3]
+					if diagonalFirst == 1 and diagonalFirst2 == 4:
 						return 1
-					if diagonalFirst == 16:
+					if diagonalFirst == 16 and diagonalFirst2 == 8:
 						return 2
 					diagonalSecond = grid[x][y]*grid[x-1][y+1]*grid[x-2][y+2]*grid[x-3][y+3]
-					if diagonalSecond == 1:
+					diagonalSecond2 = grid[x][y]+grid[x-1][y+1]+grid[x-2][y+2]+grid[x-3][y+3]
+					if diagonalSecond == 1 and diagonalSecond2 == 4:
 						return 1
-					if diagonalSecond == 16:
+					if diagonalSecond == 16 and diagonalSecond2 == 8:
 						return 2
 				except IndexError:
 					pass
