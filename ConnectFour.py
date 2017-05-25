@@ -1,9 +1,10 @@
 import sys
 class MyConnectFour:
 	
-	def __init__(self):
+	def __init__(self,depth):
 		#self.grid = int[7][6]
 		self.grid = []
+		self.depth = depth*2
 		for x in range(7):
 			self.grid.append([])
 			for y in range(6):
@@ -133,9 +134,8 @@ class MyConnectFour:
 							
 			return output
 							
-	def getPotentialDoubleGridsFlat(self, player, grid, depth):
-		depth=depth*2
-		originalList = self.getPotentialDoubleGrids(player, grid, depth)
+	def getPotentialDoubleGridsFlat(self, player):
+		originalList = self.getPotentialDoubleGrids(player, grid, self.depth)
 		newList = []
 		for i in range(len(originalList)):
 			newList.append(self.flatten(originalList[i]))
@@ -177,10 +177,10 @@ class MyConnectFour:
 			else:
 				print("COL",i+1,":",0,"Possibilities")
 				
-	def play(self,depth):
+	def play(self):
 		while True:
 			self.printGrid(self.grid)
-			potentials = self.getPotentialDoubleGridsFlat(1,self.grid,depth)
+			potentials = self.getPotentialDoubleGridsFlat(1)
 			self.printPotentials(potentials)
 			moveSuccess = 0
 			while moveSuccess == 0:
@@ -195,7 +195,7 @@ class MyConnectFour:
 			elif evaluation == 3:
 				print ("\nTIE GAME")
 			self.printGrid(self.grid)
-			potentials2 = self.getPotentialDoubleGridsFlat(2,self.grid,depth)
+			potentials2 = self.getPotentialDoubleGridsFlat(2)
 			self.printPotentials(potentials2)
 			moveSuccess = 0
 			while moveSuccess == 0:
@@ -258,9 +258,9 @@ class DoubleGrid():
 				
 	
 def main():			
-	c4 = MyConnectFour()
 	depth = int(input("How many pairs of moves ahead would you like to compute?\nEnter an integer 1-3: "))
-	c4.play(depth)
+	c4 = MyConnectFour(depth)
+	c4.play()
 	
 if __name__=="__main__":
 	main()
