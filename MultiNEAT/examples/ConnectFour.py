@@ -78,6 +78,7 @@ def evaluate(genome, population):
             # see if someone won, if so, break
             # make move as p2
             # see if someone won, if so, break
+
         # if p1 won the above round, p1FirstWins += 1
         # if tied, p1FirstTies += 1
 
