@@ -1,3 +1,4 @@
+import sys
 class MyConnectFour:
 	
 	def __init__(self):
@@ -166,11 +167,11 @@ class MyConnectFour:
 				for j in range(len(potentials[i])):
 					if potentials[i][j] != None:
 						num += 1
-				print("COLUMN ",i+1,":",num)
+				print("COL",i+1,":",num,"Possibilities")
 			elif self.isDoubleGrid(potentials[i]):
-				print("COLUMN ",i+1,":",1)
+				print("COL",i+1,":",1,"Possibilities")
 			else:
-				print("COLUMN ",i+1,":",0)
+				print("COL",i+1,":",0,"Possibilities")
 				
 	def play(self,depth):
 		while True:
@@ -179,7 +180,7 @@ class MyConnectFour:
 			self.printPotentials(potentials)
 			moveSuccess = 0
 			while moveSuccess == 0:
-				col = input("Player 1 col: ")
+				col = input("Player 1 move: ")
 				col = int("0"+col)
 				if col>=1 and col<=7:
 					moveSuccess = self.actualMove(col-1, 1)
@@ -194,7 +195,7 @@ class MyConnectFour:
 			self.printPotentials(potentials2)
 			moveSuccess = 0
 			while moveSuccess == 0:
-				col = input("Player 2 col: ")
+				col = input("Player 2 move: ")
 				col = int("0"+col)
 				if col>=1 and col<=7:
 					moveSuccess = self.actualMove(col-1, 2)
@@ -230,12 +231,34 @@ class DoubleGrid():
 					
 	def getDoubleGrid(self):
 		return self.doubleGrid
+	
+	def getReverseDoubleGrid(self):
+		reverseGrid = []
+		for x in range(14):
+			reverseGrid.append([])
+			for y in range(6):
+				reverseGrid[x].append(0)
+				
+		for x in range(7):
+			for y in range(6):
+				if grid[x][y]==1:
+					if player == 1:
+						reverseGrid[13-x][y]=1
+					else:
+						reverseGrid[13-(x+7)][y]=1
+				elif grid[x][y]==2:
+					if player == 1:
+						reverseGrid[13-(x+7)][y]=1
+					else:
+						reverseGrid[13-x][y]=1
 				
 	
 def main():			
 	c4 = MyConnectFour()
-	c4.play(3)
+	depth = int(input("How many pairs of moves ahead would you like to compute?\nEnter an integer 1-3: "))
+	c4.play(depth)
 	
-main()
+if __name__=="__main__":
+	main()
 					
 		
