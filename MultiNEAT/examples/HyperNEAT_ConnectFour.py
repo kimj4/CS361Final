@@ -25,10 +25,13 @@ sys.path.insert(0, '/Accounts/kimj4/CS361Final')
 from ConnectFour import MyConnectFour
 from ConnectFour import DoubleGrid
 
+
+from datetime import datetime
+
 ####### added code
 
 params = NEAT.Parameters()
-params.PopulationSize = 100
+params.PopulationSize = 10
 # set properties here
 
 #   params: (id,
@@ -76,61 +79,57 @@ def evaluate(genome, population):
         player2Net.SetInputOutputDimentions(2, 1)
         p2Genome.BuildPhenotype(player2Net)
 
+        # Game where p1 goes first
+        curPlayer = 1
         winner = 0
         game = MyConnectFour(1)
-        # curPlayer = 1
         while (True):
-            # make the game
-            makeMove(1,player1Net,game)
-            game.printGrid(game.grid)
-            outcome = game.getGameOutcome(game.grid)
-            if outcome!=0:
+            if curPlayer == 1:
+                makeMove(1, player1Net, game)
+                outcome = game.getGameOutcome(game.grid)
+            elif curPlayer == 2:
+                makeMove(2, player2Net, game)
+                outcome = game.getGameOutcome(game.grid)
+            else:
+                print("catastrophic failure")
+
+            curPlayer = (curPlayer % 2) + 1
+            if outcome != 0:
                 winner = outcome
                 break
-            makeMove(2,player2Net,game)
-            sys.stdout.write('.')
-            outcome = game.getGameOutcome(game.grid)
-            if outcome!=0:
-                winner = outcome
-                break
-        print(outcome)
+
         if winner == 1:
             p1FirstWins += 1
         if winner == 3:
             p1FirstTies += 1
 
+
+        # Game where p2 goes first
+        curPlayer = 2
         winner = 0
         game = MyConnectFour(1)
         while (True):
-            # make the game
-            makeMove(2,player1Net,game)
-            sys.stdout.write('.')
-            outcome = game.getGameOutcome(game.grid)
-            if outcome!=0:
+            if curPlayer == 1:
+                makeMove(1, player1Net, game)
+                outcome = game.getGameOutcome(game.grid)
+            elif curPlayer == 2:
+                makeMove(2, player2Net, game)
+                outcome = game.getGameOutcome(game.grid)
+            else:
+                print("catastrophic failure")
+
+            curPlayer = (curPlayer % 2) + 1
+            if outcome != 0:
                 winner = outcome
                 break
-            makeMove(1,player2Net,game)
-            sys.stdout.write('.')
-            outcome = game.getGameOutcome(game.grid)
-            if outcome!=0:
-                winner = outcome
-                break
-        print(outcome)
+
         if winner == 1:
             p1SecondWins += 1
         if winner == 3:
             p1SecondTies += 1
-    # let's input just one pattern to the net, activate it once and get the output
-    # net.Input( [ 1.0, 0.0, 1.0 ] )
-    # net.Activate()
-    # output = net.Output()
 
-    # the output can be used as any other Python iterable. For the purposes of the tutorial,
-    # we will consider the fitness of the individual to be the neural network that outputs constantly
-    # 0.0 from the first output (the second output is ignored)
-
-    # fitness = SOME FITNESS MEASURE FOR THE FIRST GENOME dependent on
-    return 27
+    print("one evaluatation complete")
+    return p1FirstWins + p1SecondWins + 0.5 * (p1FirstTies + p1SecondTies)
 
 def makeMove(player, playerNet, game):
     playerPotentials = game.getPotentialDoubleGridsFlat(player)
@@ -163,7 +162,7 @@ def makeMove(player, playerNet, game):
     bestIndexSoFar = -1
     bestMinSoFar = -10000
     for i in range(len(outputList)):
-        print(outputList[i])
+        # print(outputList[i])
         if outputList[i] != [] and outputList[i] != None:
             minimum = min(outputList[i])
             if minimum > bestMinSoFar:
@@ -172,10 +171,68 @@ def makeMove(player, playerNet, game):
 
     game.actualMove(bestIndexSoFar, player)
 
+def playAgainstHuman(genome):
+    game = MyConnectFour(1)
 
-for a in NEAT.GetGenomeList(pop1):
-    evaluate(a, pop2)
-    break
+    computerNet = NEAT.NeuralNetwork()
+    computerNet.SetInputOutputDimentions(2, 1)
+    genome.BuildPhenotype(computerNet)
+
+    game.printGrid(game.grid)
+    while (True):
+        humanMove = input("your move [1, 7]")
+        game.actualMove(humanMove - 1, 1)
+        outcome = game.getGameOutcome(game.grid)
+        game.printGrid(game.grid)
+        if outcome != 0:
+            winner = outcome
+            break
+
+        makeMove(2, computerNet, game)
+        outcome = game.getGameOutcome(game.grid)
+        game.printGrid(game.grid)
+        if outcome != 0:
+            winner = outcome
+            break
+
+    if winner == 1:
+        print("Computer still isn't very good")
+    elif winner == 2:
+        print("Wow, we evolved a pretty good player")
+    else:
+        print("????")
+
+
+
+
+for generation in range(100):
+    start = time.time()
+
+    playAgainstHuman(NEAT.GetGenomeList(pop1)[5])
+
+
+    for genome in NEAT.GetGenomeList(pop1):
+        fitness = evaluate(genome, pop2)
+        genome.SetFitness(fitness)
+
+    for genome in NEAT.GetGenomeList(pop2):
+        fitness = evaluate(genome, pop1)
+        genome.SetFitness(fitness)
+
+
+
+
+
+    pop1.Epoch()
+    pop2.Epoch()
+
+    end = time.time()
+    print(end - start)
+
+
+
+
+
 ####### end added code
 
 
