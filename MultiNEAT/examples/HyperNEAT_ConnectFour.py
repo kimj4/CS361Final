@@ -9,22 +9,20 @@ The code below is just TestHyperNEAT_xor.py for now
 
 import os
 import sys
-sys.path.insert(0, '/home/peter/code/projects/MultiNEAT') # duh
+sys.path.insert(0, '/Accounts/sharpeg/CS361Final')
 import time
 import random as rnd
 import subprocess as comm
-import cv2
 import numpy as np
 import pickle as pickle
+import cv2
 import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-sys.path.insert(0, '/Accounts/kimj4/CS361Final')
 from ConnectFour import MyConnectFour
 from ConnectFour import DoubleGrid
-
 
 from datetime import datetime
 
@@ -49,17 +47,20 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
     indicesToPlay = []
     #see how many games you have to play, find that many you havent played and play them
     while len(indicesToPlay)< numToPlay:
-        i = rnd.randint(0,len(popGenomeList)-1)
-        #dont play someone that is you, that youve played, or who has all their games, or you're already gonna play
-        canPlay = True
-        if i == genomeNum:
-            canPlay = False
-        if gameMatrix[genomeNum][i] == True:
-            canPlay = False
-        if i in indicesToPlay:
-            canPlay = False
-        if canPlay:
-            indicesToPlay.append(i)
+        try:
+            i = rnd.randint(0,len(popGenomeList)-1)
+            #dont play someone that is you, that youve played, or who has all their games, or you're already gonna play
+            canPlay = True
+            if i == genomeNum:
+                canPlay = False
+            if gameMatrix[genomeNum][i] == True:
+                canPlay = False
+            if i in indicesToPlay:
+                canPlay = False
+            if canPlay:
+                indicesToPlay.append(i)
+        except(IndexError):
+            pass
 
     for i in indicesToPlay:
 
@@ -100,8 +101,10 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
             p1wins += 1
         elif winner == 3:
             ties += 1
-        else:
+        elif winner == 2:
             p2wins += 1
+        else:
+            print("WTF THIS MAKES NO SENSE")
 
         # Game where p2 goes first
         curPlayer = 2
@@ -129,8 +132,10 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
             p1wins += 1
         elif winner == 3:
             ties += 1
-        else:
+        elif winner == 2:
             p2wins += 1
+        else:
+            print("WTF THIS MAKES NO SENSE")
 
         gameMatrix[genomeNum][i]=True
         gameMatrix[i][genomeNum]=True
@@ -142,6 +147,8 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         gamesSoFar[i][0]+=p2wins
         gamesSoFar[i][1]+=ties
         gamesSoFar[i][2]+=p1wins
+
+        print(p1wins==p2wins,numMoves,numMoves2)
 
 
         #print("player in pop "+str(popNum)+" won "+str(p1FirstWins + p1SecondWins)+" and tied "+str(p1FirstTies + p1SecondTies))
@@ -159,6 +166,7 @@ def getNetOutputs(player, playerNet, game, symmetry):
                     # game.printGrid(playerPotentials[i][j].getDoubleGrid())
                     inputs = playerPotentials[i][j].makeIntoList()
                     inputs.append(1.0)
+                    playerNet.Flush()
                     playerNet.Input(inputs)
                     playerNet.Activate()
                     # print("\n")
@@ -169,6 +177,7 @@ def getNetOutputs(player, playerNet, game, symmetry):
                     if symmetry:
                         inputs = playerPotentials[i][j].makeIntoReverseList()
                         inputs.append(1.0)
+                        playerNet.Flush()
                         playerNet.Input(inputs)
                         playerNet.Activate()
                         # print("\n")
@@ -180,6 +189,7 @@ def getNetOutputs(player, playerNet, game, symmetry):
         elif game.isDoubleGrid(playerPotentials[i]):
             inputs = playerPotentials[i][j].makeIntoList()
             inputs.append(1.0)
+            playerNet.Flush()
             playerNet.Input(inputs)
             playerNet.Activate()
             # print("\n")
@@ -190,6 +200,7 @@ def getNetOutputs(player, playerNet, game, symmetry):
             if symmetry:
                 inputs = playerPotentials[i][j].makeIntoList()
                 inputs.append(1.0)
+                playerNet.Flush()
                 playerNet.Input(inputs)
                 playerNet.Activate()
                 # print("\n")
@@ -270,7 +281,7 @@ def playAgainstRandom(genome, symmetry):
             break
     if winner == 2:
         wins = wins + 1
-    if winner == 3:
+    elif winner == 3:
         wins = wins + 0.5
     winner = 0
     game = MyConnectFour(1)
@@ -290,13 +301,13 @@ def playAgainstRandom(genome, symmetry):
             break
     if winner == 1:
         wins = wins + 1
-    if winner == 3:
+    elif winner == 3:
         wins = wins + 0.5
     return wins
 
 def main():
     output_file = sys.argv[1]
-    output_file = file(output_file,"w")
+    output_file = open(output_file,"w")
 
     symmetry = sys.argv[2]
 
@@ -348,8 +359,8 @@ def main():
     #                    (genome, params, ramdomize weights, random range, rng seed)
     pop1 = NEAT.Population(genome, params, True, 1.0, 0) # the 0 is the RNG seed
 
-    for generation in range(10):
-        print ("generation: "+str(generation))
+    for generation in range(50):
+        print("generation: "+str(generation))
 
         gameMatrix = []
         gamesSoFar = []
@@ -362,7 +373,7 @@ def main():
         for i in range(params.PopulationSize):
             if sum(gamesSoFar[i]) < 10:
                 evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry)
-        print gamesSoFar
+        print(gamesSoFar)
         bestFitnessIndex = -1
         bestFitness = -1
         for i in range(params.PopulationSize):
@@ -377,7 +388,7 @@ def main():
         for i in range(10):
             randomWins += playAgainstRandom(NEAT.GetGenomeList(pop1)[bestFitnessIndex],symmetry)
         output_file.write(str(generation)+","+str(randomWins))
-        print "gen "+str(generation)+" beats random "+str(randomWins)+" out of 20"
+        print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 20")
         pop1.Epoch()
 
         end = time.time()
