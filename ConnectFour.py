@@ -37,13 +37,14 @@ class MyConnectFour:
         if not grid:
             print("None")
             return
-        print(" 1 2 3 4 5 6 7")
-        print(" - - - - - - -")
         for y in range(len(grid[0])-1,-1,-1):
             line = ""
             for x in range(len(grid)):
                 line = line+" "+str(grid[x][y])
             print(line)
+        print(" - - - - - - -")
+        print(" 1 2 3 4 5 6 7\n")
+
 
     def convertToDoubleGrid(self, grid, player):
         return DoubleGrid(grid,player)
@@ -104,8 +105,9 @@ class MyConnectFour:
 
     def getPotentialDoubleGrids(self, player, grid, depth):
         if depth == 0:
-            return self.convertToDoubleGrid(grid, player)
+            return (self.convertToDoubleGrid(grid, player),True)
         else:
+            foundValid = False
             output = []
             #for each move player can make
             for myMove in range(7):
@@ -115,14 +117,17 @@ class MyConnectFour:
                 evaluation = self.evaluate(gridCopy)
                 #if the move failed, put None in the output instead of a list of recursive outputs
                 if moveSuccess == 0:
-                    output.append(None)
+                    output.append([None])
                 #if the move resulted in a victory, put that single victory in the output, instead of a list
                 elif evaluation == player:
                     output.append([self.convertToDoubleGrid(gridCopy, player)])
+                    foundValid = True
                 #if the move was valid and the game continues
                 else:
+                    foundValid = True
                     #add a list to the output
                     output.append([])
+                    foundSubValid = False
                     #for each move the other player could make
                     for theirMove in range(7):
                         #attempt that move on a copy of the grid
@@ -133,13 +138,20 @@ class MyConnectFour:
                             output[myMove].append(None)
                         elif evaluation2 == 3-player:
                             output[myMove].append(self.convertToDoubleGrid(gridCopy2, player))
+                            foundSubValid = True
                         else:
-                            output[myMove].append(self.getPotentialDoubleGrids(player, gridCopy2, depth-2))
+                            recursiveCall = self.getPotentialDoubleGrids(player, gridCopy2, depth-2)
+                            output[myMove].append(recursiveCall[0])
+                            if recursiveCall[1]:
+                                foundSubValid = True
+                    #if none of the opponents moves will be valid, your move needs to be possible still
+                    if foundSubValid==False:
+                        output[myMove].append([self.convertToDoubleGrid(gridCopy, player)])
 
-            return output
+            return (output, foundValid)
 
     def getPotentialDoubleGridsFlat(self, player):
-        originalList = self.getPotentialDoubleGrids(player, self.grid, self.depth)
+        originalList = self.getPotentialDoubleGrids(player, self.grid, self.depth)[0]
         newList = []
         for i in range(len(originalList)):
             newList.append(self.flatten(originalList[i]))
@@ -192,12 +204,13 @@ class MyConnectFour:
                 col = int("0"+col)
                 if col>=1 and col<=7:
                     moveSuccess = self.actualMove(col-1, 1)
-                    evaluation = self.evaluate(self.grid)
+                    evaluation = self.getGameOutcome(self.grid)
             if evaluation == 1:
                 print ("\nPLAYER 1 WINS")
                 break
             elif evaluation == 3:
                 print ("\nTIE GAME")
+                break
             self.printGrid(self.grid)
             potentials2 = self.getPotentialDoubleGridsFlat(2)
             self.printPotentials(potentials2)
@@ -207,18 +220,20 @@ class MyConnectFour:
                 col = int("0"+col)
                 if col>=1 and col<=7:
                     moveSuccess = self.actualMove(col-1, 2)
-                    evaluation = self.evaluate(self.grid)
+                    evaluation = self.getGameOutcome(self.grid)
             if evaluation == 2:
                 print ("\nPLAYER 1 WINS")
                 break
             elif evaluation == 3:
                 print ("\nTIE GAME")
+                break
         self.printGrid(self.grid)
 
 class DoubleGrid():
 
     def __init__(self,grid,player):
         self.doubleGrid = []
+        self.player=player
         for x in range(14):
             self.doubleGrid.append([])
             for y in range(6):
@@ -249,16 +264,17 @@ class DoubleGrid():
 
         for x in range(7):
             for y in range(6):
-                if grid[x][y]==1:
-                    if player == 1:
+                if self.doubleGrid[x][y]==1:
+                    if self.player == 1:
                         reverseGrid[13-x][y]=1
                     else:
                         reverseGrid[13-(x+7)][y]=1
-                elif grid[x][y]==2:
-                    if player == 1:
+                elif self.doubleGrid[x][y]==2:
+                    if self.player == 1:
                         reverseGrid[13-(x+7)][y]=1
                     else:
                         reverseGrid[13-x][y]=1
+        return reverseGrid
 
     def makeIntoList(self):
         flattenedList = []
@@ -267,6 +283,13 @@ class DoubleGrid():
                 flattenedList.append(self.doubleGrid[x][y])
         return flattenedList
 
+    def makeIntoReverseList(self):
+        reversedGrid = self.getReverseDoubleGrid()
+        flattenedList = []
+        for x in range(14):
+            for y in range(6):
+                flattenedList.append(reversedGrid[x][y])
+        return flattenedList
 
 
 def main():
