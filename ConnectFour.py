@@ -11,6 +11,8 @@ class MyConnectFour:
                 self.grid[x].append(0)
 
     def move(self, grid, col, player):
+        if int(col) > 6:
+            return False
         changed = False
         if player == 1:
             piece = 1

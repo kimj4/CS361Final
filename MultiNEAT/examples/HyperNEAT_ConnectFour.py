@@ -62,12 +62,13 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         except(IndexError):
             pass
 
+    #play each of the randomly selected genomes twice
     for i in indicesToPlay:
 
         p2Genome = popGenomeList[i]
 
-        winner1 = play(p1Genome, p2Genome, substrate, symmetry)
-        winner2 = play(p2Genome, p1Genome, substrate, symmetry)
+        winner1 = play(p1Genome, p2Genome, substrate, symmetry, False)
+        winner2 = play(p2Genome, p1Genome, substrate, symmetry, False)
 
         p1wins,p2wins,ties = 0,0,0
         if winner1 == 1:
@@ -77,9 +78,9 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         else:
             ties += 1
 
-        if winner1 == 1:
+        if winner2 == 1:
             p2wins += 1
-        elif winner1 == 2:
+        elif winner2 == 2:
             p1wins += 1
         else:
             ties += 1
@@ -94,6 +95,45 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         gamesSoFar[i][0]+=p2wins
         gamesSoFar[i][1]+=ties
         gamesSoFar[i][2]+=p1wins
+
+    #then play random 4 times
+    winner1 = play(p1Genome, "Random", substrate, symmetry, False)
+    winner2 = play("Random", p1Genome, substrate, symmetry, False)
+    winner3 = play(p1Genome, "Random", substrate, symmetry, False)
+    winner4 = play("Random", p1Genome, substrate, symmetry, False)
+
+    p1wins,p2wins,ties = 0,0,0
+    if winner1 == 1:
+        p1wins += 1
+    elif winner1 == 2:
+        p2wins += 1
+    else:
+        ties += 1
+
+    if winner2 == 1:
+        p2wins += 1
+    elif winner2 == 2:
+        p1wins += 1
+    else:
+        ties += 1
+
+    if winner3 == 1:
+        p1wins += 1
+    elif winner3 == 2:
+        p2wins += 1
+    else:
+        ties += 1
+
+    if winner4 == 1:
+        p2wins += 1
+    elif winner4 == 2:
+        p1wins += 1
+    else:
+        ties += 1
+
+    gamesSoFar[genomeNum][0]+=p1wins
+    gamesSoFar[genomeNum][1]+=ties
+    gamesSoFar[genomeNum][2]+=p2wins
 
 def getNetOutputs(player, playerNet, game, symmetry):
     playerPotentials = game.getPotentialDoubleGridsFlat(player)
@@ -123,7 +163,7 @@ def getNetOutputs(player, playerNet, game, symmetry):
                         # print("\n")
                         for output in playerNet.Output():
                             listOfMinimums.append(output)
-                            # print(output)
+                            #print output
                         # print("\n")
 
         elif game.isDoubleGrid(playerPotentials[i]):
@@ -158,7 +198,9 @@ def makeMove(player, playerNet, game, symmetry):
 
     bestIndexSoFar = -1
     bestMinSoFar = -10000
-    for i in range(len(outputList)):
+    indices = range(len(outputList))
+    rnd.shuffle(indices)
+    for i in indices:
         # print(outputList[i])
         if outputList[i] != [] and outputList[i] != None:
             minimum = min(outputList[i])
@@ -171,7 +213,7 @@ def makeMove(player, playerNet, game, symmetry):
     #for debugging
     return bestIndexSoFar
 
-def play(player1, player2, substrate, symmetry):
+def play(player1, player2, substrate, symmetry, printing):
     game = MyConnectFour(1)
     if isinstance(player1, NEAT.Genome):
         player1Net = NEAT.NeuralNetwork()
@@ -183,21 +225,23 @@ def play(player1, player2, substrate, symmetry):
     curPlayer = 1
     numMoves = 0
     while True:
+        if printing:
+            game.printGrid(game.grid)
         if curPlayer == 1:
             player = player1
         else:
             player = player2
         if player=="Human":
-            game.printGrid(game.grid)
-            humanMove = input("your move [1, 7]")
-            game.actualMove(humanMove - 1, 1)
-            game.printGrid(game.grid)
+            moveFound = 0
+            while not moveFound:
+                humanMove = input("your move [1, 7]")
+                moveFound = game.actualMove(humanMove - 1, curPlayer)
         elif player=="Random":
             #game.printGrid(game.grid)
-            moveFound = False
-            while moveFound == False:
+            moveFound = 0
+            while not moveFound:
                 randomMove = rnd.randint(0,6)
-                moveFound = game.actualMove(randomMove, 1)
+                moveFound = game.actualMove(randomMove, curPlayer)
             #game.printGrid(game.grid)
         else:
             if curPlayer == 1:
@@ -210,7 +254,7 @@ def play(player1, player2, substrate, symmetry):
         if outcome != 0:
             winner = outcome
             break
-    print str(numMoves)+"    "+str(rnd.randint(0,10000))
+    #print str(numMoves)
     return winner
 
 def main():
@@ -221,7 +265,7 @@ def main():
 
     params = NEAT.Parameters()
 
-    params.PopulationSize = 20 #changed
+    params.PopulationSize = 25 #changed
     params.TournamentSize = 2 #changed
 
     params.DynamicCompatibility = True
@@ -268,19 +312,6 @@ def main():
 
     # set properties here
 
-    #   params: (id,
-    #            number of inputs,
-    #            number of hidden (ignored for seed_type 0, specifies number of hidden nodes for seed_type 1)),
-    #            number of outputs
-    #            a_FS_NEAT,
-    #            output activation function type,
-    #            hidden activation function type,
-    #            seed type,
-    #            parameters object,
-    genome = NEAT.Genome(0, 7 * 6 * 2 + 1, 0, 1, False, NEAT.ActivationFunction.UNSIGNED_SIGMOID, NEAT.ActivationFunction.UNSIGNED_SIGMOID, 0, params)
-    # two inputs per board position
-    # one output for the potential board
-
     inputCoordinateList = []
     for x in range(14):
         for y in range(6):
@@ -289,7 +320,7 @@ def main():
     hiddenCoordinateList = []
     for x in range(14):
         for y in range(6):
-            hiddenCoordinateList.append((x,y))
+            hiddenCoordinateList.append((x,y+6))
 
     substrate = NEAT.Substrate(inputCoordinateList,hiddenCoordinateList,[(0,0)])
     substrate.m_allow_input_hidden_links = True
@@ -309,11 +340,30 @@ def main():
 
     substrate.m_max_weight_and_bias = 8.0
 
+    #   params: (id,
+    #            number of inputs,
+    #            number of hidden (ignored for seed_type 0, specifies number of hidden nodes for seed_type 1)),
+    #            number of outputs
+    #            a_FS_NEAT,
+    #            output activation function type,
+    #            hidden activation function type,
+    #            seed type,
+    #            parameters object,
+    genome = NEAT.Genome(0,
+                    substrate.GetMinCPPNInputs(),
+                    0,
+                    substrate.GetMinCPPNOutputs(),
+                    False,
+                    NEAT.ActivationFunction.TANH,
+                    NEAT.ActivationFunction.TANH,
+                    0,
+                    params)
     #                    (genome, params, ramdomize weights, random range, rng seed)
     pop1 = NEAT.Population(genome, params, True, 1.0, 0) # the 0 is the RNG seed
+    pop1.RNG.Seed(rnd.randint(1,100))
 
-    #play("Human",NEAT.GetGenomeList(pop1)[1],substrate,symmetry)
-    for generation in range(50):
+    for generation in range(100):
+        #play("Human",NEAT.GetGenomeList(pop1)[1],substrate,symmetry,True)
         print("generation: "+str(generation))
         gameMatrix = []
         gamesSoFar = []
@@ -323,40 +373,41 @@ def main():
                 gameMatrix[i].append(False)
             gamesSoFar.append([0,0,0])
 
-        # for i in range(params.PopulationSize):
-        #     if sum(gamesSoFar[i]) < 10:
-        #         evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry)
+        for i in range(params.PopulationSize):
+            if sum(gamesSoFar[i]) < 10:
+                evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry)
         print(gamesSoFar)
         bestFitnessIndex = -1
         bestFitness = -1
         for i in range(params.PopulationSize):
             games = sum(gamesSoFar[i])
-            fitness = (gamesSoFar[i][0]+gamesSoFar[i][1]*.5)/(games+1)
+            fitness = (gamesSoFar[i][0]+gamesSoFar[i][1]*.5)/games
             NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
             if fitness > bestFitness:
                 bestFitness = fitness
                 bestFitnessIndex = i
 
         randomWins = 0
-        for i in range(10):
-            winner1 = play("Random",NEAT.GetGenomeList(pop1)[1],substrate,symmetry)
-            winner2 = play(NEAT.GetGenomeList(pop1)[1],"Random",substrate,symmetry)
+        for i in range(7):
+            winner1 = play("Random",NEAT.GetGenomeList(pop1)[bestFitnessIndex],substrate,symmetry,False)
+            winner2 = play(NEAT.GetGenomeList(pop1)[bestFitnessIndex],"Random",substrate,symmetry,False)
             if winner1 == 2:
                 randomWins += 1
             elif winner1 == 3:
-                randomwWins += .5
+                randomWins += .5
             if winner2 == 1:
                 randomWins += 1
             elif winner2 == 3:
                 randomWins += .5
-        output_file.write(str(generation)+","+str(randomWins))
-        print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 20")
+            print str(winner1==2)+" "+str(winner2==1)
+        output_file.write(str(generation)+","+str(randomWins)+"\n")
+        print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 14")
         pop1.Epoch()
 
         end = time.time()
 
 
-    play("Human",NEAT.GetGenomeList(pop1)[bestFitnessIndex],substrate,symmetry)
+    play("Human",NEAT.GetGenomeList(pop1)[bestFitnessIndex],substrate,symmetry,True)
 
 main()
 
