@@ -174,7 +174,7 @@ public:
     {
         return m_neurons[a_idx];
     }
-    void SetInputOutputDimensions(const unsigned int a_i, const unsigned int a_o)
+    void SetInputOutputDimentions(const unsigned int a_i, const unsigned int a_o)
     {
         m_num_inputs = a_i;
         m_num_outputs = a_o;
@@ -194,7 +194,7 @@ public:
         m_neurons.clear();
         m_connections.clear();
         m_total_weight_change.clear();
-        SetInputOutputDimensions(0, 0);
+        SetInputOutputDimentions(0, 0);
     }
 
     double GetConnectionLenght(Neuron source, Neuron target)

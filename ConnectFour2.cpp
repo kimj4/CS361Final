@@ -344,12 +344,6 @@ BOOST_PYTHON_MODULE(ConnectFour2) {
         .add_property("gameState", &PossibleMove::gameState)
     ;
 
-    class_<std::vector<int> >("intVec")
-        .def(vector_indexing_suite<std::vector<int> >());
-
-    class_<std::vector<std::vector<int> > >("int2DVec")
-        .def(vector_indexing_suite<std::vector<std::vector<int> > >());
-
     class_<std::vector<PossibleMove> >("PMList")
         .def(vector_indexing_suite<std::vector<PossibleMove> >());
 

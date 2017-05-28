@@ -1,31 +1,32 @@
 #!/usr/bin/python3
 '''
-Evolving players for connect four using MultiNEAT.
-The framework being used is HyperNEAT
-
-
-The code below is just TestHyperNEAT_xor.py for now
+This is a version that has been modified from HyperNEAT_ConnectFour.py after
+Modifications. This will now make use of the C++ connect four library.
 '''
 
 import os
 import sys
+# Change this for different machines
 # sys.path.insert(0, '/Accounts/sharpeg/CS361Final')
 sys.path.insert(0, '/home/juyun/CS361Final')
 import time
 import random as rnd
 import subprocess as comm
-import numpy as np
+# import numpy as np
 import pickle as pickle
-import cv2
+# import cv2
 import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from ConnectFour import MyConnectFour
-from ConnectFour import DoubleGrid
+# from ConnectFour import MyConnectFour
+# from ConnectFour import DoubleGrid
 
 from datetime import datetime
+
+# import ConnectFour2
+from ConnectFour2 import Game, GameTree, PossibleMove, printGame
 
 ####### added code
 
@@ -75,7 +76,8 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         # Game where p1 goes first
         curPlayer = 1
         winner = 0
-        game = MyConnectFour(1)
+        # game = MyConnectFour(1)
+        game = Game()
         numMoves = 0
         p1wins = 0
         p2wins = 0
@@ -83,11 +85,13 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         while (True):
             if curPlayer == 1:
                 makeMove(1, player1Net, game, symmetry)
-                outcome = game.getGameOutcome(game.grid)
+                # outcome = game.getGameOutcome(game.grid)
+                outcome = game.evaluate()
                 numMoves += 1
             elif curPlayer == 2:
                 makeMove(2, player2Net, game, symmetry)
-                outcome = game.getGameOutcome(game.grid)
+                # outcome = game.getGameOutcome(game.grid)
+                outcome = game.evaluate()
                 numMoves += 1
             else:
                 print("catastrophic failure")
@@ -162,64 +166,78 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
     gamesSoFar[genomeNum][2]+=p2wins
 
 def getNetOutputs(player, playerNet, game, symmetry):
-    playerPotentials = game.getPotentialDoubleGridsFlat(player)
+    gTree = GameTree(1, game, player)
+    # playerPotentials = game.getPotentialDoubleGridsFlat(player)
     outputList = []
-    for i in range(len(playerPotentials)):
+    # for i in range(len(playerPotentials)):
+    for i in range(gTree.length()):
+        iList = gTree.getPMAt(i).getInputFormatVec(player)
+        line = []
+        for i in iList:
+            line.append(i)
+        line.append(1.0)
+        playerNet.Flush()
+        playerNet.Input(line)
+        [playerNet.Activate() for _ in range(5)]
         listOfMinimums = []
-        if (isinstance(playerPotentials[i], list)):
-            for j in range(len(playerPotentials[i])):
-                if playerPotentials[i][j] != None:
-                    # print(playerPotentials[i][j])
-                    # game.printGrid(playerPotentials[i][j].getDoubleGrid())
-                    inputs = playerPotentials[i][j].makeIntoList()
-                    inputs.append(1.0)
-                    playerNet.Flush()
-                    playerNet.Input(inputs)
-                    [playerNet.Activate() for _ in range(5)]
-                    # print("\n")
-                    for output in playerNet.Output():
-                        listOfMinimums.append(output)
-                    # print("\n")
-                    if symmetry:
-                        inputs = playerPotentials[i][j].makeIntoReverseList()
-                        inputs.append(1.0)
-                        playerNet.Flush()
-                        playerNet.Input(inputs)
-                        [playerNet.Activate() for _ in range(5)]
-                        # print("\n")
-                        for output in playerNet.Output():
-                            listOfMinimums.append(output)
-                            #print output
-                        # print("\n")
+        for output in playerNet.Output():
+            listOfMinimums.append(output)
+        # TODO: if symmetry:
 
-        elif game.isDoubleGrid(playerPotentials[i]):
-            inputs = playerPotentials[i][j].makeIntoList()
-            inputs.append(1.0)
-            playerNet.Flush()
-            playerNet.Input(inputs)
-            [playerNet.Activate() for _ in range(5)]
-            # print("\n")
-            for output in playerNet.Output():
-                listOfMinimums.append(output)
-                # print(output)
-            # print("\n")
-            if symmetry:
-                inputs = playerPotentials[i][j].makeIntoList()
-                inputs.append(1.0)
-                playerNet.Flush()
-                playerNet.Input(inputs)
-                [playerNet.Activate() for _ in range(5)]
-
-                # print("\n")
-                for output in playerNet.Output():
-                    listOfMinimums.append(output)
-                    # print(output)
-                # print("\n")
-        outputList.append(listOfMinimums)
+        #
+        # if (isinstance(playerPotentials[i], list)):
+        #     for j in range(len(playerPotentials[i])):
+        #         if playerPotentials[i][j] != None:
+        #             # print(playerPotentials[i][j])
+        #             # game.printGrid(playerPotentials[i][j].getDoubleGrid())
+        #             inputs = playerPotentials[i][j].makeIntoList()
+        #             inputs.append(1.0)
+        #             playerNet.Flush()
+        #             playerNet.Input(inputs)
+        #             [playerNet.Activate() for _ in range(5)]
+        #             # print("\n")
+        #             for output in playerNet.Output():
+        #                 listOfMinimums.append(output)
+        #             # print("\n")
+        #             if symmetry:
+        #                 inputs = playerPotentials[i][j].makeIntoReverseList()
+        #                 inputs.append(1.0)
+        #                 playerNet.Flush()
+        #                 playerNet.Input(inputs)
+        #                 [playerNet.Activate() for _ in range(5)]
+        #                 # print("\n")
+        #                 for output in playerNet.Output():
+        #                     listOfMinimums.append(output)
+        #                     #print output
+        #                 # print("\n")
+        #
+        # elif game.isDoubleGrid(playerPotentials[i]):
+        #     inputs = playerPotentials[i][j].makeIntoList()
+        #     inputs.append(1.0)
+        #     playerNet.Flush()
+        #     playerNet.Input(inputs)
+        #     [playerNet.Activate() for _ in range(5)]
+        #     # print("\n")
+        #     for output in playerNet.Output():
+        #         listOfMinimums.append(output)
+        #         # print(output)
+        #     # print("\n")
+        #     if symmetry:
+        #         inputs = playerPotentials[i][j].makeIntoList()
+        #         inputs.append(1.0)
+        #         playerNet.Flush()
+        #         playerNet.Input(inputs)
+        #         [playerNet.Activate() for _ in range(5)]
+        #
+        #         # print("\n")
+        #         for output in playerNet.Output():
+        #             listOfMinimums.append(output)
+        #             # print(output)
+        #         # print("\n")
+        # outputList.append(listOfMinimums)
     return outputList
 
 def makeMove(player, playerNet, game, symmetry):
-
     outputList = getNetOutputs(player, playerNet, game, symmetry)
 
     bestIndexSoFar = -1
@@ -234,7 +252,8 @@ def makeMove(player, playerNet, game, symmetry):
                 bestIndexSoFar = i
                 bestMinSoFar = minimum
 
-    moveoutcome = game.actualMove(bestIndexSoFar, player)
+    moveoutcome = game.makeMove(player, bestIndexSoFar)
+    # moveoutcome = game.actualMove(bestIndexSoFar, player)
 
     #for debugging
     return bestIndexSoFar
@@ -284,6 +303,8 @@ def play(player1, player2, substrate, symmetry, printing):
     return winner
 
 def main():
+    if (len(sys.argv) < 2):
+        print("usage: python HyperNEAT_ConnectFour_V3.py path/to/output.file symmetry(true or false)")
     output_file = sys.argv[1]
     output_file = open(output_file,"w")
 
@@ -304,7 +325,7 @@ def main():
     params.MaxSpecies = 4 #changed
     params.RouletteWheelSelection = False
 
-    params.MutateRemLinkProb = 0.02
+    params.MutateRemLinkProc = 0.02
     params.RecurrentProb = 0
     params.OverallMutationRate = 0.30 #changed
     params.MutateAddLinkProb = 0.08
@@ -399,9 +420,12 @@ def main():
                 gameMatrix[i].append(False)
             gamesSoFar.append([0,0,0])
 
+            # print("here")
+
         for i in range(params.PopulationSize):
             if sum(gamesSoFar[i]) < 10:
                 evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry)
+
         print(gamesSoFar)
         bestFitnessIndex = -1
         bestFitness = -1
@@ -432,179 +456,6 @@ def main():
 
         end = time.time()
 
-
     play("Human",NEAT.GetGenomeList(pop1)[bestFitnessIndex],substrate,symmetry,True)
 
 main()
-
-####### end added code
-
-
-
-#
-#
-#
-# # the simple 2D substrate with 3 input points, 2 hidden and 1 output for XOR
-#
-# substrate = NEAT.Substrate([(-1, -1), (-1, 0), (-1, 1)],
-#                            [(0, -1), (0, 0), (0, 1)],
-#                            [(1, 0)])
-#
-# substrate.m_allow_input_hidden_links = False
-# substrate.m_allow_input_output_links = False
-# substrate.m_allow_hidden_hidden_links = False
-# substrate.m_allow_hidden_output_links = False
-# substrate.m_allow_output_hidden_links = False
-# substrate.m_allow_output_output_links = False
-# substrate.m_allow_looped_hidden_links = False
-# substrate.m_allow_looped_output_links = False
-#
-# substrate.m_allow_input_hidden_links = True
-# substrate.m_allow_input_output_links = False
-# substrate.m_allow_hidden_output_links = True
-# substrate.m_allow_hidden_hidden_links = False
-#
-# substrate.m_hidden_nodes_activation = NEAT.ActivationFunction.SIGNED_SIGMOID
-# substrate.m_output_nodes_activation = NEAT.ActivationFunction.UNSIGNED_SIGMOID
-#
-# substrate.m_with_distance = True
-#
-# substrate.m_max_weight_and_bias = 8.0
-#
-# try:
-#     x = pickle.dumps(substrate)
-# except:
-#     print('You have mistyped a substrate member name upon setup. Please fix it.')
-#     sys.exit(1)
-#
-#
-# def evaluate(genome):
-#     net = NEAT.NeuralNetwork()
-#     try:
-#         genome.BuildHyperNEATPhenotype(net, substrate)
-#
-#         error = 0
-#         depth = 5
-#
-#         # do stuff and return the fitness
-#         net.Flush()
-#
-#         net.Input([1, 0, 1])
-#         [net.Activate() for _ in range(depth)]
-#         o = net.Output()
-#         error += abs(o[0] - 1)
-#
-#         net.Flush()
-#         net.Input([0, 1, 1])
-#         [net.Activate() for _ in range(depth)]
-#         o = net.Output()
-#         error += abs(o[0] - 1)
-#
-#         net.Flush()
-#         net.Input([1, 1, 1])
-#         [net.Activate() for _ in range(depth)]
-#         o = net.Output()
-#         error += abs(o[0] - 0)
-#
-#         net.Flush()
-#         net.Input([0, 0, 1])
-#         [net.Activate() for _ in range(depth)]
-#         o = net.Output()
-#         error += abs(o[0] - 0)
-#
-#         return (4 - error) ** 2
-#
-#     except Exception as ex:
-#         print('Exception:', ex)
-#         return 1.0
-#
-#
-# params = NEAT.Parameters()
-#
-# params.PopulationSize = 150
-#
-# params.DynamicCompatibility = True
-# params.CompatTreshold = 2.0
-# params.YoungAgeTreshold = 15
-# params.SpeciesMaxStagnation = 100
-# params.OldAgeTreshold = 35
-# params.MinSpecies = 5
-# params.MaxSpecies = 10
-# params.RouletteWheelSelection = False
-#
-# params.MutateRemLinkProb = 0.02
-# params.RecurrentProb = 0
-# params.OverallMutationRate = 0.15
-# params.MutateAddLinkProb = 0.08
-# params.MutateAddNeuronProb = 0.01
-# params.MutateWeightsProb = 0.90
-# params.MaxWeight = 8.0
-# params.WeightMutationMaxPower = 0.2
-# params.WeightReplacementMaxPower = 1.0
-#
-# params.MutateActivationAProb = 0.0
-# params.ActivationAMutationMaxPower = 0.5
-# params.MinActivationA = 0.05
-# params.MaxActivationA = 6.0
-#
-# params.MutateNeuronActivationTypeProb = 0.03
-#
-# params.ActivationFunction_SignedSigmoid_Prob = 0.0
-# params.ActivationFunction_UnsignedSigmoid_Prob = 0.0
-# params.ActivationFunction_Tanh_Prob = 1.0
-# params.ActivationFunction_TanhCubic_Prob = 0.0
-# params.ActivationFunction_SignedStep_Prob = 1.0
-# params.ActivationFunction_UnsignedStep_Prob = 0.0
-# params.ActivationFunction_SignedGauss_Prob = 1.0
-# params.ActivationFunction_UnsignedGauss_Prob = 0.0
-# params.ActivationFunction_Abs_Prob = 0.0
-# params.ActivationFunction_SignedSine_Prob = 1.0
-# params.ActivationFunction_UnsignedSine_Prob = 0.0
-# params.ActivationFunction_Linear_Prob = 1.0
-#
-# params.AllowLoops = False
-#
-# def getbest(i):
-#     g = NEAT.Genome(0,
-#                     substrate.GetMinCPPNInputs(),
-#                     0,
-#                     substrate.GetMinCPPNOutputs(),
-#                     False,
-#                     NEAT.ActivationFunction.TANH,
-#                     NEAT.ActivationFunction.TANH,
-#                     0,
-#                     params)
-#
-#     pop = NEAT.Population(g, params, True, 1.0, i)
-#     pop.RNG.Seed(i)
-#
-#     for generation in range(2000):
-#         genome_list = NEAT.GetGenomeList(pop)
-#         # if sys.platform == 'linux':
-#         #    fitnesses = EvaluateGenomeList_Parallel(genome_list, evaluate, display=False)
-#         # else:
-#         fitnesses = EvaluateGenomeList_Serial(genome_list, evaluate, display=False)
-#         [genome.SetFitness(fitness) for genome, fitness in zip(genome_list, fitnesses)]
-#
-#         print('Gen: %d Best: %3.5f' % (generation, max(fitnesses)))
-#
-#         best = max(fitnesses)
-#
-#         pop.Epoch()
-#         generations = generation
-#
-#         if best > 15.0:
-#             break
-#
-#     return generations
-#
-#
-# gens = []
-# for run in range(100):
-#     gen = getbest(run)
-#     gens += [gen]
-#     print('Run:', run, 'Generations to solve XOR:', gen)
-# avg_gens = sum(gens) / len(gens)
-#
-# print('All:', gens)
-# print('Average:', avg_gens)

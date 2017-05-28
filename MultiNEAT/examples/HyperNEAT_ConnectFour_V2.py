@@ -25,6 +25,11 @@ from ConnectFour2 import Game, GameTree, PossibleMove, printGame
 
 params = NEAT.Parameters()
 params.PopulationSize = 10
+
+
+
+
+# params.TournamentSize = 2
 # set properties here
 
 #   params: (id,
@@ -132,6 +137,7 @@ def makeMove(player, playerNet, game):
         for a in iList:
             line.append(a)
 
+        playerNet.Flush()    
         playerNet.Input(line)
         playerNet.Activate()
         # output list is size 1

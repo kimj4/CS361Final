@@ -224,7 +224,7 @@ void Substrate::ClearCustomConnectivity()
 
 int Substrate::GetMinCPPNInputs()
 {
-    // determine the dimensionality across the entire substrate
+    // determine the Dimentionality across the entire substrate
     int cppn_inputs = GetMaxDims() * 2; // twice, because we query 2 points at a time
 
     // the distance input
@@ -289,7 +289,7 @@ void Substrate::PrintInfo()
     std::cerr << "Inputs: " << m_input_coords.size() << "\n";
     std::cerr << "Hidden: " << m_hidden_coords.size() << "\n";
     std::cerr << "Outputs: " << m_output_coords.size() << "\n\n";
-    std::cerr << "Dimensions: " << GetMinCPPNInputs() << "\n";
+    std::cerr << "Dimentions: " << GetMinCPPNInputs() << "\n";
 }
 // namespace NEAT
 

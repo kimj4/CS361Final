@@ -397,7 +397,7 @@ void Parameters::Reset()
     // The Bias value for the CPPN queries.
     CPPN_Bias = 1.0;
 
-    // Quadtree Dimensions
+    // Quadtree Dimentions
     // The range of the tree. Typically set to 2,
     Width = 2.0;
 
