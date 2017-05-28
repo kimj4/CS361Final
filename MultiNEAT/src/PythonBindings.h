@@ -189,8 +189,8 @@ BOOST_PYTHON_MODULE(_MultiNEAT)
             &NeuralNetwork::AddNeuron)
             .def("AddConnection",
             &NeuralNetwork::AddConnection)
-            .def("SetInputOutputDimentions",
-            &NeuralNetwork::SetInputOutputDimentions)
+            .def("SetInputOutputDimensions",
+            &NeuralNetwork::SetInputOutputDimensions)
 
             .def("GetTotalConnectionLength", &NeuralNetwork::GetTotalConnectionLength)
 

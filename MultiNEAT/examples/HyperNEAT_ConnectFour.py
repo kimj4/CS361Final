@@ -40,7 +40,7 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
     # build the NN for the individual that we are evaluating.
     p1Genome = popGenomeList[genomeNum]
     player1Net = NEAT.NeuralNetwork()
-    player1Net.SetInputOutputDimentions(2, 1)
+    player1Net.SetInputOutputDimensions(2, 1)
     p1Genome.BuildHyperNEATPhenotype(player1Net,substrate)
 
     numToPlay = (10 - sum(gamesSoFar[genomeNum]))/2.0
@@ -67,7 +67,7 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         p2Genome = popGenomeList[i]
         # build opponent NN
         player2Net = NEAT.NeuralNetwork()
-        player2Net.SetInputOutputDimentions(2, 1)
+        player2Net.SetInputOutputDimensions(2, 1)
         p2Genome.BuildHyperNEATPhenotype(player2Net, substrate)
 
         # Game where p1 goes first
@@ -232,7 +232,7 @@ def playAgainstHuman(genome, symmetry):
     game = MyConnectFour(1)
 
     computerNet = NEAT.NeuralNetwork()
-    computerNet.SetInputOutputDimentions(2, 1)
+    computerNet.SetInputOutputDimensions(2, 1)
     genome.BuildPhenotype(computerNet)
 
     game.printGrid(game.grid)
@@ -262,7 +262,7 @@ def playAgainstHuman(genome, symmetry):
 def playAgainstRandom(genome, symmetry):
     game = MyConnectFour(1)
     computerNet = NEAT.NeuralNetwork()
-    computerNet.SetInputOutputDimentions(2, 1)
+    computerNet.SetInputOutputDimensions(2, 1)
     genome.BuildPhenotype(computerNet)
     wins = 0
     while (True):

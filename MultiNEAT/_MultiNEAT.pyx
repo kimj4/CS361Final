@@ -710,8 +710,8 @@ cdef class NeuralNetwork:
         cdef cmn.Neuron nneur = self.thisptr.GetNeuronByIndex(a_idx)
         return pyNeuronFromReference(nneur)
 
-    def SetInputOutputDimentions(self, const unsigned short a_i, const unsigned short a_o):
-        self.thisptr.SetInputOutputDimentions(a_i, a_o)
+    def SetInputOutputDimensions(self, const unsigned short a_i, const unsigned short a_o):
+        self.thisptr.SetInputOutputDimensions(a_i, a_o)
 
     property num_inputs:
             def __get__(self): return self.thisptr.m_num_inputs

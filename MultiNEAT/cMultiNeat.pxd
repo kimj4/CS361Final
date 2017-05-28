@@ -291,7 +291,7 @@ cdef extern from "src/NeuralNetwork.h" namespace "NEAT":
         void AddConnection(const Connection& a_c)
         Connection GetConnectionByIndex(unsigned int a_idx) const
         Neuron GetNeuronByIndex(unsigned int a_idx) const
-        void SetInputOutputDimentions(const unsigned short a_i, const unsigned short a_o)
+        void SetInputOutputDimensions(const unsigned short a_i, const unsigned short a_o)
         unsigned int NumInputs() const
         unsigned int NumOutputs() const
 

@@ -560,7 +560,7 @@ void Genome::BuildPhenotype(NeuralNetwork& a_Net) const
 {
     // first clear out the network
     a_Net.Clear();
-    a_Net.SetInputOutputDimentions(m_NumInputs, m_NumOutputs);
+    a_Net.SetInputOutputDimensions(m_NumInputs, m_NumOutputs);
 
     // Fill the net with the neurons
     for(unsigned int i=0; i<NumNeurons(); i++)
@@ -635,7 +635,7 @@ void Genome::BuildHyperNEATPhenotype(NeuralNetwork& net, Substrate& subst)
     }
 
     // Now we create the substrate (net)
-    net.SetInputOutputDimentions(static_cast<unsigned short>(subst.m_input_coords.size()),
+    net.SetInputOutputDimensions(static_cast<unsigned short>(subst.m_input_coords.size()),
                                  static_cast<unsigned short>(subst.m_output_coords.size()));
 
     // Inputs
@@ -2892,7 +2892,7 @@ void Genome::BuildESHyperNEATPhenotype(NeuralNetwork& net, Substrate& subst, Par
 
     net.m_neurons.reserve(maxNodes);
     net.m_connections.reserve((maxNodes*(maxNodes -1))/2);
-    net.SetInputOutputDimentions(static_cast<unsigned short>(input_count),
+    net.SetInputOutputDimensions(static_cast<unsigned short>(input_count),
                                  static_cast<unsigned short>(output_count));
 
 
