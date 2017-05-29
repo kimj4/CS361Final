@@ -22,7 +22,6 @@ from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, Eval
 import ConnectFour2
 from ConnectFour2 import Game, GameTree, PossibleMove, printGame
 
-####### added code
 
 params = NEAT.Parameters()
 params.PopulationSize = 10
@@ -70,37 +69,17 @@ params.ActivationFunction_Linear_Prob = 1.0
 params.AllowLoops = False
 
 
-
-
-# params.TournamentSize = 2
-# set properties here
-
-#   params: (id,
-#            number of inputs,
-#            number of hidden (ignored for seed_type 0, specifies number of hidden nodes for seed_type 1)),
-#            number of outputs
-#            a_FS_NEAT,
-#            output activation function type,
-#            hidden activation function type,
-#            seed type,
-#            parameters object,
 genome = NEAT.Genome(0, 7 * 6 * 2, 0, 1, False, NEAT.ActivationFunction.UNSIGNED_SIGMOID, NEAT.ActivationFunction.UNSIGNED_SIGMOID, 0, params)
 
 
-#                    (genome, params, ramdomize weights, random range, rng seed)
 pop1 = NEAT.Population(genome, params, True, 1.0, 2345987) # the 0 is the RNG seed
 pop2 = NEAT.Population(genome, params, True, 1.0, 9827348) # the 0 is the RNG seed
 
-'''
-coevolution may be possible. in order to evaluate an individual.
-To evaluate an individual, pass in the population that it will match against.
-- Consider some kind of sampling
-- Consider both cases: p1 goes first, p1 goes second
-'''
 
-
-
-def evaluate(genome, population):
+def evaluateCoevolution(genome, population):
+    ''' Evaluates an individual against the members of another population by
+    matching them. Fitness is a function of wins and ties
+    '''
     # build the NN for the individual that we are evaluating.
     player1Net = NEAT.NeuralNetwork()
     player1Net.SetInputOutputDimentions(2, 1)
@@ -170,7 +149,24 @@ def evaluate(genome, population):
 
     return p1FirstWins + p1SecondWins + 0.5 * (p1FirstTies + p1SecondTies)
 
+def evaluateAgainstRandom(genome, repeats):
+    ''' Utility function to allow matches against multiple RNG opponents
+    '''
+    fitness = 0;
+    for i in range(repeats):
+        if (playAgainstRandom(genome, 1) == 1):
+            fitness += 1
+        if (playAgainstRandom(genome, 2) == 1):
+            fitness += 1
+    return fitness
+
+
+
 def makeMove(player, playerNet, game):
+    ''' Analyzes the game tree to a certain depth, feeds those trees as input to
+    the NN, and makes the move depending on what it thought each outcome was
+    worth.
+    '''
     gameTree = GameTree(1, game, player)
     outputList = []
 
@@ -196,30 +192,29 @@ def makeMove(player, playerNet, game):
 
     game.makeMove(player, bestIndexSoFar)
 
-def playAgainstHuman(genome):
+def playAgainstHuman(genome, firstPlayer):
+    ''' Simulates a connect four game where one player is a NN and the other is
+    a person. If firstPlayer = 1, the NN moves first. If firstPlayer = 2, the
+    RNG moves first.
+    '''
     game = Game()
-
     computerNet = NEAT.NeuralNetwork()
-    # computerNet.SetInputOutputDimentions(2, 1)
+    computerNet.SetInputOutputDimentions(2, 1)
     genome.BuildPhenotype(computerNet)
-
     printGame(game.gameGrid);
+    curPlayer = firstPlayer
     while (True):
-        humanMove = input("your move [1, 7]")
-        game.makeMove(1, humanMove - 1)
+        if (curPlayer == 1):
+            humanMove = input("your move [1, 7]")
+            game.makeMove(1, humanMove - 1)
+        elif (curPlayer == 2):
+            makeMove(2, computerNet, game)
         outcome = game.evaluate()
         printGame(game.gameGrid);
         if outcome != 0:
             winner = outcome
             break
-
-        makeMove(2, computerNet, game)
-        outcome = game.evaluate()
-        # printGame(game.gameGrid);
-        if outcome != 0:
-            winner = outcome
-            break
-
+        curPlayer = curPlayer % 2 + 1
     if winner == 1:
         print("Computer still isn't very good")
     elif winner == 2:
@@ -228,63 +223,110 @@ def playAgainstHuman(genome):
         print("Tied. Woah")
 
 
-def playAgainstRandom(genome) :
+def playAgainstRandom(genome, firstPlayer):
+    ''' Simulates a connect four game where one player is a NN and the other is
+    an RNG. If firstPlayer = 1, the NN moves first. If firstPlayer = 2, the
+    RNG moves first.
+    '''
     game = Game()
 
     computerNet = NEAT.NeuralNetwork()
     computerNet.SetInputOutputDimentions(2, 1)
     genome.BuildPhenotype(computerNet)
+    curPlayer = firstPlayer
 
     while (True):
-        game.makeMove(1, rnd.randint(0, 6))
+        if (firstPlayer == 1):
+            game.makeMove(firstPlayer, rnd.randint(0, 6))
+        elif (firstPlayer == 2):
+            makeMove(firstPlayer, computerNet, game)
         outcome = game.evaluate()
         if outcome != 0:
             winner = outcome
             break
-
-        makeMove(2, computerNet, game)
-        outcome = game.evaluate()
-        if outcome != 0:
-            winner = outcome
-            break
-
+        curPlayer = curPlayer % 2 + 1
     return winner
 
-def findBestIndividual(p):
-    bestF = -1
-    bestG = None
-    for g in NEAT.GetGenomeList(p):
-        if (g.GetFitness() > bestF):
-            bestF = g.GetFitness()
-            bestG = g
-    return g
+def findBestIndividual(pop):
+    ''' Returns the genome of the individual with the highest fitness in the
+    given population
+    '''
+    bestFitness = -1
+    bestGenome = None
+    for genome in NEAT.GetGenomeList(pop):
+        if (genome.GetFitness() > bestFitness):
+            bestFitness = genome.GetFitness()
+            bestGenome = genome
+    return genome
 
 
-for generation in range(100):
-    # print("generation: " + str(generation))
-    start = time.time()
+def coevolve():
+    ''' Two populations evolve side by side. Each individual plays with a
+    certain sample of the other population. For now, the sample is the whole
+    population.
+    '''
+    for generation in range(100):
+        # print("generation: " + str(generation))
+        start = time.time()
 
-    NNWins = 0
-    for genome in NEAT.GetGenomeList(pop1):
-        fitness = evaluate(genome, pop2)
-        genome.SetFitness(fitness)
-        if (playAgainstRandom(genome) == 2):
-            NNWins += 1
-    # playAgainstHuman(findBestIndividual(pop1))
-
-
-    for genome in NEAT.GetGenomeList(pop2):
-        fitness = evaluate(genome, pop1)
-        genome.SetFitness(fitness)
-        if (playAgainstRandom(genome) == 2):
-            NNWins += 1
-    # playAgainstHuman(findBestIndividual(pop2))
-
-    print("Generation " + str(generation) + " win rate against random: " + str(NNWins/20.0) )
+        NNWins = 0
+        for genome in NEAT.GetGenomeList(pop1):
+            fitness = evaluate(genome, pop2)
+            genome.SetFitness(fitness)
+            if (playAgainstRandom(genome, 1) == 2):
+                NNWins += 1
+        # playAgainstHuman(findBestIndividual(pop1))
 
 
-    pop1.Epoch()
-    pop2.Epoch()
+        for genome in NEAT.GetGenomeList(pop2):
+            fitness = evaluate(genome, pop1)
+            genome.SetFitness(fitness)
+            if (playAgainstRandom(genome, 1) == 2):
+                NNWins += 1
+        # playAgainstHuman(findBestIndividual(pop2))
 
-    end = time.time()
-    print(end - start)
+        print("Generation " + str(generation) + " win rate against random: " + str(NNWins/20.0) )
+        pop1.Epoch()
+        pop2.Epoch()
+
+        end = time.time()
+        print(end - start)
+
+def randEvolve():
+    ''' One population is evolved where the fitness is a function of the number
+    of games that an individual wins against randomly-behaving players
+    '''
+    for generation in range(100):
+        start = time.time()
+        for genome in NEAT.GetGenomeList(pop1):
+            fitness = evaluateAgainstRandom(genome, 10)
+            genome.SetFitness(fitness)
+
+        pop1.Epoch()
+        end = time.time()
+        print(end - start)
+
+        if (generation % 10 == 0):
+            playAgainstHuman(findBestIndividual(pop1))
+
+def randAndCoevolve():
+    ''' Uses one population to evaluated via playing a certain number of random
+    opponents and themselves. More emphasis on the random players
+    '''
+    for generation in range(100):
+        start = time.time()
+        for genome in NEAT.GetGenomeList(pop1):
+            fitness = 2 * evaluateAgainstRandom(genome, 10) + evaluate(genome, pop1)
+            genome.SetFitness(fitness)
+
+        pop1.Epoch()
+        end = time.time()
+        print(end - start)
+
+        if (generation % 10 == 0):
+            playAgainstHuman(findBestIndividual(pop1), rnd.randint(1, 2))
+
+
+# randEvolve()
+# coevolve()
+randAndCoevolve()
