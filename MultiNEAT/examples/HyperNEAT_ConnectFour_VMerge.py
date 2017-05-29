@@ -59,6 +59,11 @@ def play(player1, player2, substrate, symmetry, printing, hyper):
                 randomMove = rnd.randint(0,6)
                 moveFound = game.makeMove(curPlayer, randomMove)
             #game.printGrid(game.grid)
+        elif player=="Left":
+            for move in range(7):
+                moveFound = game.makeMove(curPlayer, move)
+                if moveFound:
+                    break
         else:
             if curPlayer == 1:
                 makeMove(1,player1Net,game,symmetry)
@@ -346,34 +351,49 @@ def main():
                 gameMatrix[i].append(False)
             gamesSoFar.append([0,0,0])
 
-        for i in range(params.PopulationSize):
-            if sum(gamesSoFar[i]) < 10:
-                # genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmetry, hyper
-                evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry, False)
-        print(gamesSoFar)
+        # for i in range(params.PopulationSize):
+        #     if sum(gamesSoFar[i]) < 10:
+        #         # genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmetry, hyper
+        #         evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry, False)
+        # print(gamesSoFar)
+        #
+        # for i in range(params.PopulationSize):
+        #     games = sum(gamesSoFar[i])
+        #     fitness = (gamesSoFar[i][0] + gamesSoFar[i][1] * .5) / games
+        #     NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
 
         for i in range(params.PopulationSize):
-            games = sum(gamesSoFar[i])
-            fitness = (gamesSoFar[i][0] + gamesSoFar[i][1] * .5) / games
+            for j in range(10):
+                winner1 = play("Left",NEAT.GetGenomeList(pop1)[i],substrate,symmetry,False,False)
+                winner2 = play(NEAT.GetGenomeList(pop1)[i],"Left",substrate,symmetry,False,False)
+                if winner1 == 2:
+                    randomWins += 1
+                elif winner1 == 3:
+                    randomWins += .5
+                if winner2 == 1:
+                    randomWins += 1
+                elif winner2 == 3:
+                    randomWins += .5
             NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
 
         bestIndividual = findBestIndividual(pop1)
+        print "Generation "+str(generation)+",  Fitness (20 games):"+str(bestIndividual.GetFitness())
 
-        randomWins = 0
-        for i in range(7):
-            winner1 = play("Random",bestIndividual,substrate,symmetry,False,False)
-            winner2 = play(bestIndividual,"Random",substrate,symmetry,False,False)
-            if winner1 == 2:
-                randomWins += 1
-            elif winner1 == 3:
-                randomWins += .5
-            if winner2 == 1:
-                randomWins += 1
-            elif winner2 == 3:
-                randomWins += .5
-            print str(winner1==2)+" "+str(winner2==1)
-        output_file.write(str(generation)+","+str(randomWins)+"\n")
-        print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 14")
+        # randomWins = 0
+        # for i in range(7):
+        #     winner1 = play("Random",bestIndividual,substrate,symmetry,False,False)
+        #     winner2 = play(bestIndividual,"Random",substrate,symmetry,False,False)
+        #     if winner1 == 2:
+        #         randomWins += 1
+        #     elif winner1 == 3:
+        #         randomWins += .5
+        #     if winner2 == 1:
+        #         randomWins += 1
+        #     elif winner2 == 3:
+        #         randomWins += .5
+        #     print str(winner1==2)+" "+str(winner2==1)
+        # output_file.write(str(generation)+","+str(randomWins)+"\n")
+        # print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 14")
         pop1.Epoch()
 
         end = time.time()
