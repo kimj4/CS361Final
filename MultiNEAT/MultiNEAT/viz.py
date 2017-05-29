@@ -260,7 +260,7 @@ else:
 
         else:
             # HyperNEAT substrate
-            # only the first 2 dimensions are used for drawing
+            # only the first 2 Dimentions are used for drawing
             # if a layer is 1D,  y values will be supplied to make 3 rows
 
             # determine min/max coords in NN

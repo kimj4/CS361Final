@@ -14,8 +14,8 @@ import subprocess as comm
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-# sys.path.insert(0, '/home/juyun/CS361Final')
-sys.path.insert(0, '/home/ubuntu/CS361Final')
+sys.path.insert(0, '/home/juyun/CS361Final')
+# sys.path.insert(0, '/home/ubuntu/CS361Final')
 import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
@@ -26,6 +26,48 @@ from ConnectFour2 import Game, GameTree, PossibleMove, printGame
 
 params = NEAT.Parameters()
 params.PopulationSize = 10
+
+params.DynamicCompatibility = True
+params.CompatTreshold = 2.0
+params.YoungAgeTreshold = 15
+params.SpeciesMaxStagnation = 100
+params.OldAgeTreshold = 35
+params.MinSpecies = 1
+params.MaxSpecies = 3
+params.RouletteWheelSelection = False
+params.EliteFraction = .1
+
+params.MutateRemLinkProb = 0.02
+params.RecurrentProb = 0
+params.OverallMutationRate = 0.15
+params.MutateAddLinkProb = 0.08
+params.MutateAddNeuronProb = 0.01
+params.MutateWeightsProb = 0.90
+params.MaxWeight = 8.0
+params.WeightMutationMaxPower = 0.2
+params.WeightReplacementMaxPower = 1.0
+
+params.MutateActivationAProb = 0.0
+params.ActivationAMutationMaxPower = 0.5
+params.MinActivationA = 0.05
+params.MaxActivationA = 6.0
+
+params.MutateNeuronActivationTypeProb = 0.03
+
+params.ActivationFunction_SignedSigmoid_Prob = 0.0
+params.ActivationFunction_UnsignedSigmoid_Prob = 0.0
+params.ActivationFunction_Tanh_Prob = 1.0
+params.ActivationFunction_TanhCubic_Prob = 0.0
+params.ActivationFunction_SignedStep_Prob = 1.0
+params.ActivationFunction_UnsignedStep_Prob = 0.0
+params.ActivationFunction_SignedGauss_Prob = 1.0
+params.ActivationFunction_UnsignedGauss_Prob = 0.0
+params.ActivationFunction_Abs_Prob = 0.0
+params.ActivationFunction_SignedSine_Prob = 1.0
+params.ActivationFunction_UnsignedSine_Prob = 0.0
+params.ActivationFunction_Linear_Prob = 1.0
+
+params.AllowLoops = False
 
 
 
@@ -46,8 +88,8 @@ genome = NEAT.Genome(0, 7 * 6 * 2, 0, 1, False, NEAT.ActivationFunction.UNSIGNED
 
 
 #                    (genome, params, ramdomize weights, random range, rng seed)
-pop1 = NEAT.Population(genome, params, True, 1.0, 0) # the 0 is the RNG seed
-pop2 = NEAT.Population(genome, params, True, 1.0, 0) # the 0 is the RNG seed
+pop1 = NEAT.Population(genome, params, True, 1.0, 2345987) # the 0 is the RNG seed
+pop2 = NEAT.Population(genome, params, True, 1.0, 9827348) # the 0 is the RNG seed
 
 '''
 coevolution may be possible. in order to evaluate an individual.
@@ -173,7 +215,7 @@ def playAgainstHuman(genome):
 
         makeMove(2, computerNet, game)
         outcome = game.evaluate()
-        printGame(game.gameGrid);
+        # printGame(game.gameGrid);
         if outcome != 0:
             winner = outcome
             break
@@ -208,6 +250,16 @@ def playAgainstRandom(genome) :
 
     return winner
 
+def findBestIndividual(p):
+    bestF = -1
+    bestG = None
+    for g in NEAT.GetGenomeList(p):
+        if (g.GetFitness() > bestF):
+            bestF = g.GetFitness()
+            bestG = g
+    return g
+
+
 for generation in range(100):
     # print("generation: " + str(generation))
     start = time.time()
@@ -218,6 +270,7 @@ for generation in range(100):
         genome.SetFitness(fitness)
         if (playAgainstRandom(genome) == 2):
             NNWins += 1
+    # playAgainstHuman(findBestIndividual(pop1))
 
 
     for genome in NEAT.GetGenomeList(pop2):
@@ -225,6 +278,7 @@ for generation in range(100):
         genome.SetFitness(fitness)
         if (playAgainstRandom(genome) == 2):
             NNWins += 1
+    # playAgainstHuman(findBestIndividual(pop2))
 
     print("Generation " + str(generation) + " win rate against random: " + str(NNWins/20.0) )
 

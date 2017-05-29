@@ -119,9 +119,9 @@ public:
 
     int GetMaxDims();
 
-    // Return the minimum input Dimentionality of the CPPN
+    // Return the minimum input dimensionality of the CPPN
     int GetMinCPPNInputs();
-    // Return the minimum output Dimentionality of the CPPN
+    // Return the minimum output dimensionality of the CPPN
     int GetMinCPPNOutputs();
     
     // Prints some info about itself

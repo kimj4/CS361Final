@@ -392,7 +392,7 @@ public:
     // The Bias value for the CPPN queries.
     double CPPN_Bias;
 
-    // Quadtree Dimentions
+    // Quadtree Dimensions
     // The range of the tree. Typically set to 2,
     double Width;
     double Height;

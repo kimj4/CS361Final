@@ -875,7 +875,7 @@ bool NeuralNetwork::Load(std::ifstream& a_DataFile)
 
     Clear();
 
-    // read in the input/output Dimentions
+    // read in the input/output dimentions
     a_DataFile >> m_num_inputs;
     a_DataFile >> m_num_outputs;
 
