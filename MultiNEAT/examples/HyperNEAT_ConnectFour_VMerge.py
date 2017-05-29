@@ -363,6 +363,7 @@ def main():
         #     NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
 
         for i in range(params.PopulationSize):
+            randomWins = 0
             for j in range(10):
                 winner1 = play("Left",NEAT.GetGenomeList(pop1)[i],substrate,symmetry,False,False)
                 winner2 = play(NEAT.GetGenomeList(pop1)[i],"Left",substrate,symmetry,False,False)
@@ -374,7 +375,7 @@ def main():
                     randomWins += 1
                 elif winner2 == 3:
                     randomWins += .5
-            NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
+            NEAT.GetGenomeList(pop1)[i].SetFitness(randomWins)
 
         bestIndividual = findBestIndividual(pop1)
         print "Generation "+str(generation)+",  Fitness (20 games):"+str(bestIndividual.GetFitness())
