@@ -14,8 +14,9 @@ import subprocess as comm
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-sys.path.insert(0, '/accounts/sharpeg/CS361Final')
+# sys.path.insert(0, '/accounts/sharpeg/CS361Final')
 # sys.path.insert(0, '/home/ubuntu/CS361Final')
+sys.path.insert(0, '/home/juyun/CS361Final')
 import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
@@ -23,7 +24,7 @@ import ConnectFour2
 from ConnectFour2 import Game, GameTree, PossibleMove, printGame
 
 def play(player1, player2, substrate, symmetry, printing, hyper):
-    game = MyConnectFour(1)
+    game = Game()
     if isinstance(player1, NEAT.Genome):
         player1Net = NEAT.NeuralNetwork()
         if hyper:
@@ -98,7 +99,9 @@ def makeMove(player, playerNet, game, symmetry):
 
     bestIndexSoFar = -1
     bestValueSoFar = 20
-    for i in range(gameTree.length()):
+    indices = range(gameTree.length())
+    rnd.shuffle(indices)
+    for i in indices:
         if outputList[i] < bestValueSoFar:
             bestValueSoFar = outputList[i]
             bestIndexSoFar = gameTree.getPMAt(i).moves[0]
@@ -148,6 +151,7 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
 
     #play each of the randomly selected genomes twice
     for i in indicesToPlay:
+        # print("printprint")
 
         p2Genome = popGenomeList[i]
         # build opponent NN
@@ -157,27 +161,6 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
             p2Genome.BuildHyperNEATPhenotype(player2Net, substrate)
         else:
             p2Genome.BuildPhenotype(player2Net)
-
-        # Game where p1 goes first
-        curPlayer = 1
-        winner = 0
-        game = MyConnectFour(1)
-        numMoves = 0
-        p1wins = 0
-        p2wins = 0
-        ties = 0
-        while (True):
-            if curPlayer == 1:
-                makeMove(1, player1Net, game, symmetry)
-                outcome = game.getGameOutcome(game.grid)
-                numMoves += 1
-            elif curPlayer == 2:
-                makeMove(2, player2Net, game, symmetry)
-                outcome = game.getGameOutcome(game.grid)
-                numMoves += 1
-            else:
-                print("catastrophic failure")
-
 
         winner1 = play(p1Genome, p2Genome, substrate, symmetry, False, False)
         winner2 = play(p2Genome, p1Genome, substrate, symmetry, False, False)
@@ -365,14 +348,21 @@ def main():
 
         for i in range(params.PopulationSize):
             if sum(gamesSoFar[i]) < 10:
-                evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry, False, False)
+                # genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmetry, hyper
+                evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry, False)
         print(gamesSoFar)
+
+        for i in range(params.PopulationSize):
+            games = sum(gamesSoFar[i])
+            fitness = (gamesSoFar[i][0] + gamesSoFar[i][1] * .5) / games
+            NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
+
         bestIndividual = findBestIndividual(pop1)
 
         randomWins = 0
         for i in range(7):
-            winner1 = play("Random",bestIndividual,substrate,symmetry,False)
-            winner2 = play(bestIndividual,"Random",substrate,symmetry,False)
+            winner1 = play("Random",bestIndividual,substrate,symmetry,False,False)
+            winner2 = play(bestIndividual,"Random",substrate,symmetry,False,False)
             if winner1 == 2:
                 randomWins += 1
             elif winner1 == 3:
@@ -389,3 +379,5 @@ def main():
         end = time.time()
 
     play("Human",NEAT.GetGenomeList(pop1)[bestFitnessIndex],substrate,symmetry,True, False)
+
+main()
