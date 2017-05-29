@@ -50,6 +50,7 @@ def getExtensions():
     # build_sys = os.getenv('MN_BUILD')
     build_sys = 'boost'
 
+
     if build_sys is None:
         if os.path.exists('_MultiNEAT.cpp'):
             sources.insert(0, '_MultiNEAT.cpp')

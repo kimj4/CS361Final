@@ -321,15 +321,15 @@ void Parameters::Reset()
     ActivationFunction_Linear_Prob = 0.0;
     ActivationFunction_Relu_Prob = 0.0;
     ActivationFunction_Softplus_Prob = 0.0;
-
-
+    
+    
     /////////////////////////////
     // Genome properties params
     /////////////////////////////
-
+    
     // When true, don't have a special bias neuron and treat all inputs equal
     bool DontUseBiasNeuron = false;
-
+    
     // When false, this prevents any recurrent pathways in the genomes from forming
     bool AllowLoops = true;
 
@@ -397,7 +397,7 @@ void Parameters::Reset()
     // The Bias value for the CPPN queries.
     CPPN_Bias = 1.0;
 
-    // Quadtree Dimentions
+    // Quadtree Dimensions
     // The range of the tree. Typically set to 2,
     Width = 2.0;
 
@@ -731,7 +731,7 @@ int Parameters::Load(std::ifstream& a_DataFile)
             a_DataFile >> ActivationFunction_Relu_Prob;
         if (s == "ActivationFunction_Softplus_Prob")
             a_DataFile >> ActivationFunction_Softplus_Prob;
-
+    
         if (s == "DontUseBiasNeuron")
         {
             a_DataFile >> tf;
@@ -740,7 +740,7 @@ int Parameters::Load(std::ifstream& a_DataFile)
             else
                 DontUseBiasNeuron = false;
         }
-
+    
         if (s == "AllowLoops")
         {
             a_DataFile >> tf;
@@ -749,7 +749,7 @@ int Parameters::Load(std::ifstream& a_DataFile)
             else
                 AllowLoops = false;
         }
-
+    
         if (s == "DisjointCoeff")
             a_DataFile >> DisjointCoeff;
 

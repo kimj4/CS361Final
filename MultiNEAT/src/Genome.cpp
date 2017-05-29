@@ -610,9 +610,9 @@ void Genome::BuildPhenotype(NeuralNetwork& a_Net) const
 
 
 // Builds a HyperNEAT phenotype based on the substrate
-// The CPPN input Dimentionality must match the largest number of
-// Dimentions in the substrate
-// The output Dimentionality is determined according to flags set in the
+// The CPPN input dimensionality must match the largest number of
+// dimensions in the substrate
+// The output dimensionality is determined according to flags set in the
 // substrate
 
 // The procedure uses the [0] CPPN output for creating nodes, and if the substrate is leaky, [1] and [2] for time constants and biases
@@ -625,7 +625,7 @@ void Genome::BuildHyperNEATPhenotype(NeuralNetwork& net, Substrate& subst)
 
     int max_dims = subst.GetMaxDims();
 
-    // Make sure the CPPN Dimentionality is right
+    // Make sure the CPPN dimensionality is right
     ASSERT(subst.GetMinCPPNInputs() > 0);
     ASSERT(NumInputs() >= subst.GetMinCPPNInputs());
     ASSERT(NumOutputs() >= subst.GetMinCPPNOutputs());
@@ -921,7 +921,7 @@ void Genome::BuildHyperNEATPhenotype(NeuralNetwork& net, Substrate& subst)
 		if (subst.m_with_distance)
 		{
 			// compute the Eucledian distance between the two points
-			// differing Dimentionality doesn't matter as the extra Dimentions are 0s
+			// differing dimensionality doesn't matter as the extra dimensions are 0s
 			double sum=0;
 			for(int n=0; n<max_dims; n++)
 			{

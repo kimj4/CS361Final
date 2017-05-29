@@ -58,7 +58,7 @@ To evaluate an individual, pass in the population that it will match against.
 def evaluate(genome, population):
     # build the NN for the individual that we are evaluating.
     player1Net = NEAT.NeuralNetwork()
-    player1Net.SetInputOutputDimensions(2, 1)
+    player1Net.SetInputOutputDimentions(2, 1)
     genome.BuildPhenotype(player1Net)
 
     p1FirstWins = 0
@@ -71,7 +71,7 @@ def evaluate(genome, population):
     for p2Genome in popGenomeList:
         # build opponent NN
         player2Net = NEAT.NeuralNetwork()
-        player2Net.SetInputOutputDimensions(2, 1)
+        player2Net.SetInputOutputDimentions(2, 1)
         p2Genome.BuildPhenotype(player2Net)
 
         # Game where p1 goes first
@@ -170,7 +170,7 @@ def playAgainstHuman(genome):
     game = MyConnectFour(1)
 
     computerNet = NEAT.NeuralNetwork()
-    computerNet.SetInputOutputDimensions(2, 1)
+    computerNet.SetInputOutputDimentions(2, 1)
     genome.BuildPhenotype(computerNet)
 
     game.printGrid(game.grid)
