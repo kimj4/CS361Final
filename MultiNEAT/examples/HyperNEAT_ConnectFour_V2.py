@@ -10,6 +10,7 @@ import sys
 import time
 import random as rnd
 import subprocess as comm
+import pickle
 # import Random
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -361,6 +362,8 @@ def randAndCoevolveHOF():
     Store some number of elite individuals from each generation and use them
     in the evaluation of individuals in subsequent generations.
     '''
+    f = open('genomes.txt', 'w')
+
     # HOF is a list of genomes
     HOF = []
     print("1")
@@ -391,6 +394,7 @@ def randAndCoevolveHOF():
             print("an individual was already in HOF")
 
         if len(HOF) > 10:
+            pickle.dump(elite, f)
             HOF.pop(0)
 
         pop1.Epoch()
@@ -402,4 +406,8 @@ def randAndCoevolveHOF():
 # randEvolve()
 # coevolve()
 # randAndCoevolve()
-randAndCoevolveHOF()
+def main():
+
+    randAndCoevolveHOF()
+
+main()
