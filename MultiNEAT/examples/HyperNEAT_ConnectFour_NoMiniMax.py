@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 '''
-Evolving players for connect four using MultiNEAT.
-The framework being used is HyperNEAT
-The code below is just TestHyperNEAT_xor.py for now
+A different version of using Evolutionary NNs as to evolve a player to make a
+move. This is a more naive approach where the NN is just given a board state as
+input and it pops out 7 numbers each marking the 'goodness' of dropping a piece
+in that column.
 '''
 
 import os
@@ -24,7 +25,7 @@ from ConnectFour2 import Game, GameTree, PossibleMove, printGame
 
 
 params = NEAT.Parameters()
-params.PopulationSize = 10
+params.PopulationSize = 20
 
 params.DynamicCompatibility = True
 params.CompatTreshold = 2.0
@@ -69,11 +70,11 @@ params.ActivationFunction_Linear_Prob = 1.0
 params.AllowLoops = False
 
 
-genome = NEAT.Genome(0, 7 * 6 * 2, 0, 1, False, NEAT.ActivationFunction.UNSIGNED_SIGMOID, NEAT.ActivationFunction.UNSIGNED_SIGMOID, 0, params)
+genome = NEAT.Genome(0, 7 * 6 * 2, 0, 7, False, NEAT.ActivationFunction.UNSIGNED_SIGMOID, NEAT.ActivationFunction.UNSIGNED_SIGMOID, 0, params)
 
 
-pop1 = NEAT.Population(genome, params, True, 1.0, 2345987) # the 0 is the RNG seed
-pop2 = NEAT.Population(genome, params, True, 1.0, 9827348) # the 0 is the RNG seed
+pop1 = NEAT.Population(genome, params, True, 1.0, 2345987)
+pop2 = NEAT.Population(genome, params, True, 1.0, 9827348)
 
 
 def evaluateCoevolution(genome, population):
@@ -102,11 +103,15 @@ def evaluateCoevolution(genome, population):
         curPlayer = 1
         winner = 0
         game = Game()
+
+        p1MoveIndexes = []
+        p2MoveIndexes = []
+
         while (True):
             if curPlayer == 1:
-                makeMove(1, player1Net, game)
+                p1MoveIndexes.append(makeMove(1, player1Net, game))
             elif curPlayer == 2:
-                makeMove(2, player2Net, game)
+                p2MoveIndexes.append(makeMove(2, player2Net, game))
             outcome = game.evaluate()
             curPlayer = (curPlayer % 2) + 1
             if outcome != 0:
@@ -123,9 +128,9 @@ def evaluateCoevolution(genome, population):
         game = Game()
         while (True):
             if curPlayer == 1:
-                makeMove(1, player1Net, game)
+                p1MoveIndexes.append(makeMove(1, player1Net, game))
             elif curPlayer == 2:
-                makeMove(2, player2Net, game)
+                p2MoveIndexes.append(makeMove(2, player2Net, game))
             outcome = game.evaluate()
             curPlayer = (curPlayer % 2) + 1
             if outcome != 0:
@@ -135,18 +140,23 @@ def evaluateCoevolution(genome, population):
             p1SecondWins += 1
         if winner == 3:
             p1SecondTies += 1
-    return p1FirstWins + p1SecondWins + 0.5 * (p1FirstTies + p1SecondTies)
+
+    p1AvgMoveIdx = sum(p1MoveIndexes) / len(p1MoveIndexes)
+    p2AvgMoveIdx = sum(p2MoveIndexes) / len(p2MoveIndexes)
+    return [p1FirstWins + p1SecondWins + 0.5 * (p1FirstTies + p1SecondTies), p1AvgMoveIdx, p2AvgMoveIdx]
 
 def evaluateAgainstRandom(genome, repeats):
     ''' Utility function to allow matches against multiple RNG opponents
     '''
-    fitness = 0;
+    numWins = 0;
     for i in range(repeats):
-        if (playAgainstRandom(genome, 1) == 2):
-            fitness += 1
-        if (playAgainstRandom(genome, 2) == 2):
-            fitness += 1
-    return fitness
+        g1 = playAgainstRandom(genome, 1)
+        if (g1[0] == 2):
+            numWins += 1
+        g2 = playAgainstRandom(genome, 2)
+        if (g2[0] == 2):
+            numWins += 1
+    return [numWins, g1[1], g2[1]]
 
 
 
@@ -155,8 +165,10 @@ def makeMove(player, playerNet, game):
     the NN, and makes the move depending on what it thought each outcome was
     worth.
     '''
-    gameTree = GameTree(1, game, player)
+    gameTree = GameTree(0, game, player)
     outputList = []
+
+    # print(gameTree.length())
 
     for i in range(gameTree.length()):
         iList = gameTree.getPMAt(i).getInputFormatVec(player)
@@ -168,17 +180,33 @@ def makeMove(player, playerNet, game):
         playerNet.Input(line)
         playerNet.Activate()
         # output list is size 1
-        for output in playerNet.Output():
-            outputList.append(output)
+        # for output in playerNet.Output():
+        #     outputList.append(output)
 
-    bestIndexSoFar = -1
-    bestValueSoFar = 20
-    for i in range(gameTree.length()):
-        if outputList[i] < bestValueSoFar:
-            bestValueSoFar = outputList[i]
-            bestIndexSoFar = gameTree.getPMAt(i).moves[0]
+        # The list contains the moves and how good the NN thinks they are
+        for i in range(len(playerNet.Output())):
+            outputList.append([i, playerNet.Output()[i]])
 
-    game.makeMove(player, bestIndexSoFar)
+        # sorted in descending order
+        sortedMoves = sorted(outputList, key=lambda x: x[1], reverse=True)
+
+
+
+    # bestIndexSoFar = -1
+    # bestValueSoFar = 20
+    # for i in range(gameTree.length()):
+    #     if outputList[i] < bestValueSoFar:
+    #         bestValueSoFar = outputList[i]
+    #         bestIndexSoFar = gameTree.getPMAt(i).moves[0]
+    moved = False;
+    curMove = 0;
+    while (not moved):
+        moved = game.makeMove(player, sortedMoves[curMove][0])
+        curMove += 1
+        if (curMove > 7):
+            print("uh oh")
+            break;
+    return curMove - 1 # the index at which the move was made.
 
 def matchNNs(genome1, genome2):
     ''' Play two NNs against each other. Two games are played where each NN goes
@@ -197,14 +225,17 @@ def matchNNs(genome1, genome2):
     p2Wins = 0
     ties = 0
 
+    p1MoveIndexes = []
+    p2MoveIndexes = []
+
     curPlayer = 1
     for game in range(2):
         game = Game()
         while (True):
             if (curPlayer == 1):
-                makeMove(1, player1Net, game)
+                p1MoveIndexes.append(makeMove(1, player1Net, game))
             elif (curPlayer == 2):
-                makeMove(2, player2Net, game)
+                p2MoveIndexes.append(makeMove(2, player2Net, game))
             winner = game.evaluate()
             if (winner == 1):
                 p1Wins += 1
@@ -218,7 +249,9 @@ def matchNNs(genome1, genome2):
             curPlayer = curPlayer % 2 + 1
         curPlayer = 2
 
-    return [p1Wins, p2Wins, ties]
+    p1AvgMoveIdx = sum(p1MoveIndexes) / len(p1MoveIndexes)
+    p2AvgMoveIdx = sum(p2MoveIndexes) / len(p2MoveIndexes)
+    return [p1Wins, p2Wins, ties, p1AvgMoveIdx, p2AvgMoveIdx]
 
 
 
@@ -266,17 +299,21 @@ def playAgainstRandom(genome, firstPlayer):
     genome.BuildPhenotype(computerNet)
     curPlayer = firstPlayer
 
+    movesIndexes = []
+
     while (True):
         if (curPlayer == 1):
             game.makeMove(curPlayer, rnd.randint(0, 6))
         elif (curPlayer == 2):
-            makeMove(curPlayer, computerNet, game)
+            movesIndexes.append(makeMove(curPlayer, computerNet, game))
         outcome = game.evaluate()
         if outcome != 0:
             winner = outcome
             break
         curPlayer = curPlayer % 2 + 1
-    return winner
+
+    avgMoveIdx = sum(movesIndexes) / len(movesIndexes)
+    return [winner, avgMoveIdx]
 
 def findBestIndividual(pop):
     ''' Returns the genome of the individual with the highest fitness in the
@@ -363,40 +400,33 @@ def randAndCoevolveHOF():
     '''
     # HOF is a list of genomes
     HOF = []
-    print("1")
-    for generation in range(100):
+    for generation in range(1000):
         start = time.time()
         for genome in NEAT.GetGenomeList(pop1):
-            print("2")
-            fitness = evaluateAgainstRandom(genome, 10) + evaluateCoevolution(genome, pop1)
-            print("3")
+            r = evaluateAgainstRandom(genome, 10)
+            # print("random wins ratio: " + str(randomWins / 20.0))
+            a = evaluateCoevolution(genome, pop1)
+            fitness = r[0] / (r[1] + 1)  + 2 * a[0] / (a[1] + 1)
 
-            numEliteWins = 0
-            for elite in HOF:
-                print("4")
-                numEliteWins += matchNNs(genome, elite)[0]
-                print("5")
-
-            # punish individuals for beating less than half of the HOF elites
-            if (len(HOF) > 0): # just to avoid divide-by-zero errors
-                if ((numEliteWins / 2.0) / len(HOF) < 0.5):
-                    fitness /= 2.0
-                genome.SetFitness(fitness)
-
-        if findBestIndividual(pop1) not in HOF:
-            print("6")
-            HOF.append(findBestIndividual(pop1))
-            print("7")
-        else:
-            print("an individual was already in HOF")
-
-        if len(HOF) > 10:
-            HOF.pop(0)
+        #     numEliteWins = 0
+        #     for elite in HOF:
+        #         numEliteWins += matchNNs(genome, elite)[0]
+        #
+        #     # punish individuals for beating less than half of the HOF elites
+        #     if (len(HOF) > 0): # just to avoid divide-by-zero errors
+        #         if ((numEliteWins / 2.0) / len(HOF) < 0.5):
+        #             fitness /= 2.0
+        #         genome.SetFitness(fitness)
+        #
+        # if findBestIndividual(pop1) not in HOF:
+        #     HOF.append(findBestIndividual(pop1))
 
         pop1.Epoch()
         end = time.time()
         print(end - start)
-        if (generation % 10 == 0):
+        if (generation % 200 == 0):
+            playAgainstHuman(findBestIndividual(pop1), rnd.randint(1, 2))
+        if (generation % 999 == 0):
             playAgainstHuman(findBestIndividual(pop1), rnd.randint(1, 2))
 
 # randEvolve()

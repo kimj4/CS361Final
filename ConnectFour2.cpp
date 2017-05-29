@@ -260,42 +260,53 @@ public:
     std::vector<PossibleMove*> tree;
 
     GameTree(int depth, Game game, int player) {
-        // build the vector that hold the sequence of moves to perform
-        std::vector<std::vector<int> > movesVecVec;
-        std::vector<int> emptyMove;
-        movesVecVec.push_back(emptyMove);
-        movesVecVec = recursivelyBuildMoves(movesVecVec, depth);
-        buildTree(game, movesVecVec, player);
+        if (depth == 0) {
+            std::vector<int> null_moves;
+            // PossibleMove null_pm = PossibleMove(null_moves, game.gameGrid);
+            tree.push_back(new PossibleMove(null_moves, game.gameGrid));
+        } else {
+            // build the vector that hold the sequence of moves to perform
+            std::vector<std::vector<int> > movesVecVec;
+            std::vector<int> emptyMove;
+            movesVecVec.push_back(emptyMove);
+            movesVecVec = recursivelyBuildMoves(movesVecVec, depth);
+            buildTree(game, movesVecVec, player);
+        }
     }
 
     void buildTree(Game initialGame, std::vector<std::vector<int> > movesVecVec, int player) {
         int curIdx = 0;
         while (curIdx != movesVecVec.size()) {
             std::vector<std::vector<int> > newGameState = std::vector<std::vector<int> >(GAMEWIDTH, std::vector<int>(GAMEHEIGHT, 0));
+            std::vector<int> badMoves;
 
-            int curPlayer = player;
-            bool validMove = true;
-            int i;
-            for (i = 0; i < movesVecVec.at(curIdx).size(); i++) {
-                if (i == 0) {
-                    validMove = initialGame.makeMoveOnSeparateBoard(curPlayer, movesVecVec.at(curIdx).at(i), &initialGame.gameGrid ,&newGameState);
-                } else {
-                    validMove = initialGame.makeMoveOnSeparateBoard(curPlayer, movesVecVec.at(curIdx).at(i), &newGameState, &newGameState);
-                }
-                if (!validMove) {
+            if (std::find(badMoves.begin(), badMoves.end(), movesVecVec.at(curIdx).at(0)) == badMoves.end()) {
+                // if the move is not marked as bad
+                int curPlayer = player;
+                bool validMove = true;
+                int i;
+                for (i = 0; i < movesVecVec.at(curIdx).size(); i++) {
                     if (i == 0) {
-                        break;
+                        validMove = initialGame.makeMoveOnSeparateBoard(curPlayer, movesVecVec.at(curIdx).at(i), &initialGame.gameGrid ,&newGameState);
                     } else {
-                        validMove = true;
-                        break;
+                        validMove = initialGame.makeMoveOnSeparateBoard(curPlayer, movesVecVec.at(curIdx).at(i), &newGameState, &newGameState);
                     }
+                    if (!validMove) {
+                        if (i == 0) {
+                            badMoves.push_back(movesVecVec.at(curIdx).at(i));
+                            break;
+                        } else {
+                            validMove = true;
+                            break;
+                        }
+                    }
+                    curPlayer = curPlayer % 2 + 1;
                 }
-                curPlayer = curPlayer % 2 + 1;
-            }
-            if (validMove) {
-                // PossibleMove newPM = PossibleMove(movesVecVec.at(curIdx), newGameState);
-                // tree.push_back(&newPM);
-                tree.push_back(new PossibleMove(movesVecVec.at(curIdx), newGameState));
+                if (validMove) {
+                    // PossibleMove newPM = PossibleMove(movesVecVec.at(curIdx), newGameState);
+                    // tree.push_back(&newPM);
+                    tree.push_back(new PossibleMove(movesVecVec.at(curIdx), newGameState));
+                }
             }
             curIdx++;
         }
