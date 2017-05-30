@@ -22,7 +22,7 @@ import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
 import ConnectFour2
-from ConnectFour2 import Game, GameTree, PossibleMove, printGame
+from ConnectFour2 import Game, GameTree, PossibleMove, printGame, vectorPrint
 
 def play(player1, player2, substrate, symmetry, printing, hyper):
     game = Game()
@@ -450,7 +450,16 @@ def main():
         with open(output_file, "a") as f:
             f.write(stringToWrite)
         print(stringToWrite)
-
-
+# 
+# def test():
+#     game = Game();
+#     game.makeMove(1, 0);
+#     printGame(game.gameGrid);
+#     tree = GameTree(1, game, 2);
+#
+#     printGame(tree.getPMAt(0).gameState)
+#     vectorPrint(tree.getPMAt(0).getInputFormatVec(2));
+#     vectorPrint(tree.getPMAt(0).getInputFormatVecMirrored(2));
 
 main()
+# test()

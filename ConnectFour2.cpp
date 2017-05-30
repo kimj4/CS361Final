@@ -38,6 +38,26 @@ void printGame(std::vector<std::vector<int> > gameGrid) {
     std::cout << "| 1 | 2 | 3 | 4 | 5 | 6 | 7 |" << std::endl;
 }
 
+void printInputMatrix(std::vector<std::vector<int> > gameGrid) {
+    int i, j;
+    std::string thingToWrite = " ";
+    std::cout << "----------------------------------------------------------" << std::endl;
+    for (j = GAMEHEIGHT - 1; j >= 0; j--) {
+        std::cout << "| ";
+        for (i = 0; i < 2 * GAMEWIDTH; i++) {
+            if (gameGrid[i][j] == 1) {
+                thingToWrite = "O";
+            } else if (gameGrid[i][j] == 2) {
+                thingToWrite = "X";
+            }
+            std::cout << thingToWrite << " | ";
+            thingToWrite = " ";
+        }
+        std::cout << std::endl;
+        std::cout << "----------------------------------------------------------" << std::endl;
+    }
+}
+
 
 
 /*
@@ -200,49 +220,65 @@ public:
         gameState = state;
     }
 
+    /*
+     * convert the gamestate into a list of length 2 * GAMEWIDTH * GAMEHEIGHT
+     */
     std::vector<int> getInputFormatVec(int player) {
-        std::vector<int> returnList = std::vector<int>(2 * GAMEWIDTH * GAMEHEIGHT);
-        int i,j;
-        int curIdx = 0;
-        if (player == 1) {
-            for (i = 0; i < GAMEWIDTH; i++) {
-                for (j = 0; j < GAMEHEIGHT; j++) {
-                    if (gameState[i][j] == 0) {
-                        returnList[curIdx] = 0;
-                        returnList[curIdx + 1] = 0;
-                        curIdx = curIdx + 2;
-                    } else if (gameState[i][j] == 1) {
-                        returnList[curIdx] = 1;
-                        returnList[curIdx + 1] = 0;
-                        curIdx = curIdx + 2;
-                    } else if (gameState[i][j] == 2) {
-                        returnList[curIdx] = 0;
-                        returnList[curIdx + 1] = 1;
-                        curIdx = curIdx + 2;
-                    }
+        std::vector<std::vector<int> > inputMatrix = std::vector<std::vector<int> >( 2 * GAMEWIDTH, std::vector<int>(GAMEHEIGHT, 0));
+        int i, j;
+        for (i = 0; i < GAMEWIDTH; i++) {
+            for (j = 0; j < GAMEHEIGHT; j++) {
+                if (gameState[i][j] == player) {
+                    inputMatrix[i][j] = 1;
+                } else if (gameState[i][j] == (3 - player)) {
+                    inputMatrix[i + 7][j] = 1;
                 }
             }
-        } else if (player == 2) {
-            for (i = 0; i < GAMEWIDTH; i++) {
-                for (j = 0; j < GAMEHEIGHT; j++) {
-                    if (gameState[i][j] == 0) {
-                        returnList[curIdx] = 0;
-                        returnList[curIdx + 1] = 0;
-                        curIdx = curIdx + 2;
-                    } else if (gameState[i][j] == 1) {
-                        returnList[curIdx] = 0;
-                        returnList[curIdx + 1] = 1;
-                        curIdx = curIdx + 2;
-                    } else if (gameState[i][j] == 2) {
-                        returnList[curIdx] = 1;
-                        returnList[curIdx + 1] = 0;
-                        curIdx = curIdx + 2;
-                    }
-                }
+        }
+
+
+        std::vector<int> returnList = std::vector<int>(2 * GAMEWIDTH * GAMEHEIGHT);
+        int curIdx = 0;
+        for (i = 0; i < 2 * GAMEWIDTH; i++) {
+            for (j = 0; j < GAMEHEIGHT; j++) {
+                returnList[curIdx] = inputMatrix[i][j];
+                curIdx++;
             }
         }
         return returnList;
     }
+
+    /*
+     * convert the gamestate into a list of length 2 * GAMEWIDTH * GAMEHEIGHT
+     * This time, makes the list from the game state, but flipped about the
+     * vertical axis
+     */
+    std::vector<int> getInputFormatVecMirrored(int player) {
+        std::vector<std::vector<int> > inputMatrix = std::vector<std::vector<int> >( 2 * GAMEWIDTH, std::vector<int>(GAMEHEIGHT, 0));
+        int i, j;
+        for (i = 0; i < GAMEWIDTH; i++) {
+            for (j = 0; j < GAMEHEIGHT; j++) {
+                if (gameState[i][j] == player) {
+                    inputMatrix[6 - i][j] = 1;
+                } else if (gameState[i][j] == (3 - player)) {
+                    inputMatrix[13 - i][j] = 1;
+                }
+            }
+        }
+
+
+        std::vector<int> returnList = std::vector<int>(2 * GAMEWIDTH * GAMEHEIGHT);
+        int curIdx = 0;
+        for (i = 2 * GAMEWIDTH - 1; i >= 0; i--) {
+            for (j = 0; j < GAMEHEIGHT; j++) {
+                returnList[curIdx] = inputMatrix[i][j];
+                curIdx++;
+            }
+        }
+        return returnList;
+    }
+
+
 };
 
 bool operator==(const PossibleMove &lhs, const PossibleMove &rhs) {
@@ -356,14 +392,44 @@ public:
     }
 };
 
+void vectorPrint(std::vector<int> vec) {
+    for (int i = 0; i < vec.size(); i++) {
+        if (i == vec.size() - 1) {
+            std::cout << vec[i] << std::endl;
+        } else {
+            std::cout << vec[i] << ", ";
+        }
+        if (i + 1 % 6 == 0) {
+            std::cout << '\n';
+        }
+
+    }
+}
+
+// int main() {
+//     std::cout << "aaa" << '\n';
+//     Game game = Game();
+//     std::cout << "bbb" << '\n';
+//     game.makeMove(1, 0);
+//     printGame(game.gameGrid);
+//
+//
+//     GameTree tree = GameTree(1, game, 2);
+//     vectorPrint(tree.getPMAt(0).getInputFormatVec(2));
+//     vectorPrint(tree.getPMAt(0).getInputFormatVecMirrored(2));
+// }
+
 
 BOOST_PYTHON_MODULE(ConnectFour2) {
     using namespace boost::python;
 
     def("printGame", printGame);
+    def("vectorPrint", vectorPrint);
+    def("printInputMatrix", printInputMatrix);
 
     class_<PossibleMove>("PossibleMove")
         .def("getInputFormatVec", &PossibleMove::getInputFormatVec)
+        .def("getInputFormatVecMirrored", &PossibleMove::getInputFormatVecMirrored)
         .add_property("moves", &PossibleMove::moves)
         .add_property("gameState", &PossibleMove::gameState)
     ;
