@@ -42,7 +42,7 @@ def play(player1, player2, substrate, symmetry, printing, hyper):
     numMoves = 0
     while True:
         if printing:
-            game.printGrid()
+            printGame(game.gameGrid)
         if curPlayer == 1:
             player = player1
         else:
@@ -53,12 +53,12 @@ def play(player1, player2, substrate, symmetry, printing, hyper):
                 humanMove = input("your move [1, 7]")
                 moveFound = game.makeMove(curPlayer, humanMove - 1)
         elif player=="Random":
-            #game.printGrid(game.grid)
+            #game.printGame(game.grid)
             moveFound = 0
             while not moveFound:
                 randomMove = rnd.randint(0,6)
                 moveFound = game.makeMove(curPlayer, randomMove)
-            #game.printGrid(game.grid)
+            #game.printGame(game.grid)
         elif player=="Left":
             for move in range(7):
                 moveFound = game.makeMove(curPlayer, move)
@@ -70,18 +70,18 @@ def play(player1, player2, substrate, symmetry, printing, hyper):
             else:
                 makeMove(2,player2Net,game,symmetry)
         outcome = game.evaluate()
-        curPlayer = 3-curPlayer
+        curPlayer = 3 - curPlayer
         numMoves += 1
         if outcome != 0:
             winner = outcome
             break
-    #print str(numMoves)
     return winner
 
 def makeMove(player, playerNet, game, symmetry):
     ''' Analyzes the game tree to a certain depth, feeds those trees as input to
     the NN, and makes the move depending on what it thought each outcome was
     worth.
+    TODO: add different workings for using symmetry
     '''
     if symmetry:
         gameTree = GameTree(1, game, player)
@@ -125,6 +125,17 @@ def findBestIndividual(pop):
             bestGenome = genome
     return genome
 
+def testPlayerStackLeft(player, game):
+    ''' Implements a rule based player that stacks pieces on the left-most
+    non-full column
+    '''
+    board = game.gameGrid
+    column = 0
+    for i in range(len(board)):
+        game.isColumnFull(i)
+
+
+
 def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmetry, hyper):
     # build the NN for the individual that we are evaluating.
     p1Genome = popGenomeList[genomeNum]
@@ -137,7 +148,7 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
 
     numToPlay = (10 - sum(gamesSoFar[genomeNum]))/2.0
     indicesToPlay = []
-    #see how many games you have to play, find that many you havent played and play them
+
     while len(indicesToPlay)< numToPlay:
         try:
             i = rnd.randint(0,len(popGenomeList)-1)
@@ -235,14 +246,8 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
     gamesSoFar[genomeNum][1]+=ties
     gamesSoFar[genomeNum][2]+=p2wins
 
-def main():
-    output_file = sys.argv[1]
-    output_file = open(output_file,"w")
-
-    symmetry = sys.argv[2]
-
+def configureParams():
     params = NEAT.Parameters()
-
     params.PopulationSize = 25 #changed
     params.TournamentSize = 2 #changed
 
@@ -287,9 +292,9 @@ def main():
     params.ActivationFunction_Linear_Prob = 1.0
 
     params.AllowLoops = False
+    return params
 
-    # set properties here
-
+def configureSubstrate():
     inputCoordinateList = []
     for x in range(14):
         for y in range(6):
@@ -310,39 +315,48 @@ def main():
     substrate.m_allow_looped_hidden_links = False
     substrate.m_allow_looped_output_links = False
 
-
     substrate.m_hidden_nodes_activation = NEAT.ActivationFunction.SIGNED_SIGMOID
     substrate.m_output_nodes_activation = NEAT.ActivationFunction.UNSIGNED_SIGMOID
 
     substrate.m_with_distance = True
 
     substrate.m_max_weight_and_bias = 8.0
+    return substrate
 
-    #   params: (id,
-    #            number of inputs,
-    #            number of hidden (ignored for seed_type 0, specifies number of hidden nodes for seed_type 1)),
-    #            number of outputs
-    #            a_FS_NEAT,
-    #            output activation function type,
-    #            hidden activation function type,
-    #            seed type,
-    #            parameters object,
-    genome = NEAT.Genome(0,
-                    substrate.GetMinCPPNInputs(),
-                    0,
-                    substrate.GetMinCPPNOutputs(),
-                    False,
-                    NEAT.ActivationFunction.TANH,
-                    NEAT.ActivationFunction.TANH,
-                    0,
-                    params)
-    #                    (genome, params, ramdomize weights, random range, rng seed)
+
+def main():
+    # TODO: make standarized fitness function
+    # TODO: make standarized logging
+    #   What to include?
+    #       - Generations' win rates against random
+    #       - Generations' win rates against specific strategies
+    #       - Generations' win rates against each other?
+    #       - Average fitness
+    #       - Max fitness
+    #       - Min fitness
+    # TODO: store genomes to file and be able to recall them.
+
+    if (len(sys.argv) < 2):
+        print("Two command line arguments expected.")
+        print("output file")
+        print("0 for no symmetry, 1 for symmetry")
+        return
+
+    output_file = open(sys.argv[1], "w")
+    symmetry = sys.argv[2]
+
+    params = configureParams()
+    substrate = configureSubstrate()
+   
+    genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
+                         False, NEAT.ActivationFunction.TANH, NEAT.ActivationFunction.TANH,
+                         0, params)
+
     pop1 = NEAT.Population(genome, params, True, 1.0, 0) # the 0 is the RNG seed
     pop1.RNG.Seed(rnd.randint(1,10000))
 
     for generation in range(100):
-        #play("Human",NEAT.GetGenomeList(pop1)[1],substrate,symmetry,True, False)
-        print("generation: "+str(generation))
+        print("generation: " + str(generation))
         gameMatrix = []
         gamesSoFar = []
         for i in range(params.PopulationSize):
@@ -378,7 +392,7 @@ def main():
             NEAT.GetGenomeList(pop1)[i].SetFitness(randomWins)
 
         bestIndividual = findBestIndividual(pop1)
-        print "Generation "+str(generation)+",  Fitness (20 games):"+str(bestIndividual.GetFitness())
+        print "Generation " + str(generation) + ",  Fitness (20 games):" + str(bestIndividual.GetFitness())
 
         # randomWins = 0
         # for i in range(7):
@@ -395,10 +409,9 @@ def main():
         #     print str(winner1==2)+" "+str(winner2==1)
         # output_file.write(str(generation)+","+str(randomWins)+"\n")
         # print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 14")
+        play("Human", findBestIndividual(pop1), substrate, symmetry, True, False)
         pop1.Epoch()
 
-        end = time.time()
 
-    play("Human",NEAT.GetGenomeList(pop1)[bestFitnessIndex],substrate,symmetry,True, False)
 
 main()
