@@ -14,10 +14,10 @@ import subprocess as comm
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-sys.path.insert(0, '/Accounts/kimj4/CS361Final')
+# sys.path.insert(0, '/Accounts/kimj4/CS361Final')
 # sys.path.insert(0, '/accounts/sharpeg/CS361Final')
 # sys.path.insert(0, '/home/ubuntu/CS361Final')
-# sys.path.insert(0, '/home/juyun/CS361Final')
+sys.path.insert(0, '/home/juyun/CS361Final')
 import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
@@ -102,6 +102,8 @@ def makeMove(player, playerNet, game, symmetry):
         # output list is size 1
         for output in playerNet.Output():
             outputList.append(output)
+    # print(outputList)
+    # print(len(outputList))
 
     bestIndexSoFar = -1
     bestValueSoFar = 20
@@ -125,17 +127,6 @@ def findBestIndividual(pop):
             bestFitness = genome.GetFitness()
             bestGenome = genome
     return genome
-
-def testPlayerStackLeft(player, game):
-    ''' Implements a rule based player that stacks pieces on the left-most
-    non-full column
-    '''
-    board = game.gameGrid
-    column = 0
-    for i in range(len(board)):
-        game.isColumnFull(i)
-
-
 
 def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmetry, hyper):
     # build the NN for the individual that we are evaluating.
@@ -250,15 +241,16 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
 def configureParams():
     params = NEAT.Parameters()
     params.PopulationSize = 25 #changed
-    params.TournamentSize = 2 #changed
+    params.TournamentSize = 3 #changed
 
     params.DynamicCompatibility = True
     params.CompatTreshold = 2.0
     params.YoungAgeTreshold = 15
     params.SpeciesMaxStagnation = 100
     params.OldAgeTreshold = 35
+    params.EliteFraction = 0.1
 
-    params.MinSpecies = 2 #changed
+    params.MinSpecies = 1 #changed
     params.MaxSpecies = 4 #changed
     params.RouletteWheelSelection = False
 
@@ -307,21 +299,21 @@ def configureSubstrate():
             hiddenCoordinateList.append((x,y+6))
 
     substrate = NEAT.Substrate(inputCoordinateList,hiddenCoordinateList,[(0,0)])
-    substrate.m_allow_input_hidden_links = True
-    substrate.m_allow_input_output_links = False #do we really want this true
-    substrate.m_allow_hidden_hidden_links = False
-    substrate.m_allow_hidden_output_links = True
-    substrate.m_allow_output_hidden_links = False
-    substrate.m_allow_output_output_links = False
-    substrate.m_allow_looped_hidden_links = False
-    substrate.m_allow_looped_output_links = False
+    # substrate.m_allow_input_hidden_links = True
+    # substrate.m_allow_input_output_links = False #do we really want this true
+    # substrate.m_allow_hidden_hidden_links = False
+    # substrate.m_allow_hidden_output_links = True
+    # substrate.m_allow_output_hidden_links = False
+    # substrate.m_allow_output_output_links = False
+    # substrate.m_allow_looped_hidden_links = False
+    # substrate.m_allow_looped_output_links = False
 
-    substrate.m_hidden_nodes_activation = NEAT.ActivationFunction.SIGNED_SIGMOID
-    substrate.m_output_nodes_activation = NEAT.ActivationFunction.UNSIGNED_SIGMOID
+    # substrate.m_hidden_nodes_activation = NEAT.ActivationFunction.SIGNED_SIGMOID
+    # substrate.m_output_nodes_activation = NEAT.ActivationFunction.LINEAR #UNSIGNED_SIGMOID
 
-    substrate.m_with_distance = True
+    # substrate.m_with_distance = True
 
-    substrate.m_max_weight_and_bias = 8.0
+    # substrate.m_max_weight_and_bias = 8.0
     return substrate
 
 
@@ -337,27 +329,41 @@ def main():
     #       - Min fitness
     # TODO: store genomes to file and be able to recall them.
 
-    if (len(sys.argv) < 2):
+    if (len(sys.argv) < 4):
         print("Two command line arguments expected.")
         print("output file")
         print("0 for no symmetry, 1 for symmetry")
+        print("0 to silence games, 1 to view games")
+        print("0 for NEAT, 1 for HyperNEAT")
         return
 
-    output_file = open(sys.argv[1], "w")
-    symmetry = sys.argv[2]
+    # output_file = open(sys.argv[1], "w")
+    output_file = sys.argv[1]
+    symmetry = int(sys.argv[2])
+    printGames = int(sys.argv[3])
+    hyper = int(sys.argv[4])
+
+    with open(output_file, "w") as f:
+        f.write("symmetry: " + str(bool(symmetry)) + "\n")
+        f.write("HyperNEAT: " + str(bool(hyper)) + "\n")
+        f.write("Gen | Min | Avg | Max | RunTime\n")
+
 
     params = configureParams()
     substrate = configureSubstrate()
-   
-    genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
-                         False, NEAT.ActivationFunction.TANH, NEAT.ActivationFunction.TANH,
-                         0, params)
 
-    pop1 = NEAT.Population(genome, params, True, 1.0, 0) # the 0 is the RNG seed
+    # genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
+    #                      False, NEAT.ActivationFunction.TANH, NEAT.ActivationFunction.TANH,
+    #                      0, params)
+    genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, 1,
+                      False, NEAT.ActivationFunction.TANH, NEAT.ActivationFunction.TANH,
+                      0, params)
+
+    pop1 = NEAT.Population(genome, params, True, 1.0, 0)
     pop1.RNG.Seed(rnd.randint(1,10000))
 
     for generation in range(100):
-        print("generation: " + str(generation))
+        begin = time.time()
         gameMatrix = []
         gamesSoFar = []
         for i in range(params.PopulationSize):
@@ -377,23 +383,30 @@ def main():
         #     fitness = (gamesSoFar[i][0] + gamesSoFar[i][1] * .5) / games
         #     NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
 
-        for i in range(params.PopulationSize):
-            randomWins = 0
+        stringToWrite = str(generation) + ','
+        # with open(output_file, "a") as f:
+        #     f.write("==== Generation " + str(generation) + "====")
+        fitnesses = []
+        for genome in NEAT.GetGenomeList(pop1):
+            leftWins = 0
             for j in range(10):
-                winner1 = play("Left",NEAT.GetGenomeList(pop1)[i],substrate,symmetry,False,False)
-                winner2 = play(NEAT.GetGenomeList(pop1)[i],"Left",substrate,symmetry,False,False)
+                winner1 = play("Left", genome, substrate, symmetry, printGames, hyper)
+                winner2 = play(genome, "Left", substrate, symmetry, printGames, hyper)
                 if winner1 == 2:
-                    randomWins += 1
+                    leftWins += 1
                 elif winner1 == 3:
-                    randomWins += .5
+                    leftWins += .5
                 if winner2 == 1:
-                    randomWins += 1
+                    leftWins += 1
                 elif winner2 == 3:
-                    randomWins += .5
-            NEAT.GetGenomeList(pop1)[i].SetFitness(randomWins)
+                    leftWins += .5
+            fitnesses.append(leftWins)
+            genome.SetFitness(leftWins)
+
 
         bestIndividual = findBestIndividual(pop1)
-        print "Generation " + str(generation) + ",  Fitness (20 games):" + str(bestIndividual.GetFitness())
+        # print ("Evaluating against players that stack on the left-most available column")
+        # print ("Generation " + str(generation) + ",  Fitness (20 games): " + str(bestIndividual.GetFitness()))
 
         # randomWins = 0
         # for i in range(7):
@@ -410,8 +423,13 @@ def main():
         #     print str(winner1==2)+" "+str(winner2==1)
         # output_file.write(str(generation)+","+str(randomWins)+"\n")
         # print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 14")
-        play("Human", findBestIndividual(pop1), substrate, symmetry, True, False)
+        # play("Human", findBestIndividual(pop1), substrate, symmetry, True, False)
         pop1.Epoch()
+        end = time.time()
+        stringToWrite = stringToWrite + str(min(fitnesses)) + ',' + str(sum(fitnesses) / len(fitnesses)) + ',' + str(max(fitnesses)) + ',' + str(end - begin) + '\n'
+        with open(output_file, "a") as f:
+            f.write(stringToWrite)
+        print(stringToWrite)
 
 
 
