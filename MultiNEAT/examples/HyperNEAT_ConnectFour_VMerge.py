@@ -104,7 +104,7 @@ def makeMove(player, playerNet, game, symmetry):
         # output list is size 1
         for output in playerNet.Output():
             outputList.append(output)
-    # print(outputList)
+    print(outputList)
     # print(len(outputList))
 
     bestIndexSoFar = -1
@@ -243,7 +243,7 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
 def configureParams():
     params = NEAT.Parameters()
     params.PopulationSize = 25 #changed
-    params.TournamentSize = 3 #changed
+    params.TournamentSize = 4 #changed
 
     params.DynamicCompatibility = True
     params.CompatTreshold = 2.0
@@ -253,7 +253,7 @@ def configureParams():
     params.EliteFraction = 0.1
 
     params.MinSpecies = 1 #changed
-    params.MaxSpecies = 4 #changed
+    params.MaxSpecies = 6 #changed
     params.RouletteWheelSelection = False
 
     params.MutateRemLinkProb = 0.02
@@ -273,18 +273,22 @@ def configureParams():
 
     params.MutateNeuronActivationTypeProb = 0.03
 
+    # params.ActivationFunction_SignedSigmoid_Prob = 0.0
+    # params.ActivationFunction_UnsignedSigmoid_Prob = 0.0
+    # params.ActivationFunction_Tanh_Prob = 1.0
+    # params.ActivationFunction_TanhCubic_Prob = 0.0
+    # params.ActivationFunction_SignedStep_Prob = 1.0
+    # params.ActivationFunction_UnsignedStep_Prob = 0.0
+    # params.ActivationFunction_SignedGauss_Prob = 1.0
+    # params.ActivationFunction_UnsignedGauss_Prob = 0.0
+    # params.ActivationFunction_Abs_Prob = 0.0
+    # params.ActivationFunction_SignedSine_Prob = 1.0
+    # params.ActivationFunction_UnsignedSine_Prob = 0.0
+    # params.ActivationFunction_Linear_Prob = 1.0
     params.ActivationFunction_SignedSigmoid_Prob = 0.0
-    params.ActivationFunction_UnsignedSigmoid_Prob = 0.0
-    params.ActivationFunction_Tanh_Prob = 1.0
-    params.ActivationFunction_TanhCubic_Prob = 0.0
-    params.ActivationFunction_SignedStep_Prob = 1.0
-    params.ActivationFunction_UnsignedStep_Prob = 0.0
-    params.ActivationFunction_SignedGauss_Prob = 1.0
-    params.ActivationFunction_UnsignedGauss_Prob = 0.0
-    params.ActivationFunction_Abs_Prob = 0.0
-    params.ActivationFunction_SignedSine_Prob = 1.0
-    params.ActivationFunction_UnsignedSine_Prob = 0.0
-    params.ActivationFunction_Linear_Prob = 1.0
+    params.ActivationFunction_UnsignedSigmoid_Prob = 1.0
+    params.ActivationFunction_Tanh_Prob = 0.0
+    params.ActivationFunction_SignedStep_Prob = 0.0
 
     params.AllowLoops = False
     return params
@@ -301,15 +305,17 @@ def configureSubstrate():
             hiddenCoordinateList.append((x,y+6))
 
     substrate = NEAT.Substrate(inputCoordinateList,hiddenCoordinateList,[(0,0)])
-    # substrate.m_allow_input_hidden_links = True
-    # substrate.m_allow_input_output_links = False #do we really want this true
-    # substrate.m_allow_hidden_hidden_links = False
-    # substrate.m_allow_hidden_output_links = True
-    # substrate.m_allow_output_hidden_links = False
-    # substrate.m_allow_output_output_links = False
-    # substrate.m_allow_looped_hidden_links = False
-    # substrate.m_allow_looped_output_links = False
+    substrate.m_allow_input_hidden_links = True
+    substrate.m_allow_input_output_links = True #do we really want this true
+    substrate.m_allow_hidden_hidden_links = False
+    substrate.m_allow_hidden_output_links = True
+    substrate.m_allow_output_hidden_links = False
+    substrate.m_allow_output_output_links = False
+    substrate.m_allow_looped_hidden_links = False
+    substrate.m_allow_looped_output_links = False
 
+    substrate.m_hidden_nodes_activation = NEAT.ActivationFunction.UNSIGNED_SIGMOID
+    substrate.m_output_nodes_activation = NEAT.ActivationFunction.UNSIGNED_SIGMOID
     # substrate.m_hidden_nodes_activation = NEAT.ActivationFunction.SIGNED_SIGMOID
     # substrate.m_output_nodes_activation = NEAT.ActivationFunction.LINEAR #UNSIGNED_SIGMOID
 
@@ -317,6 +323,7 @@ def configureSubstrate():
 
     # substrate.m_max_weight_and_bias = 8.0
     return substrate
+
 
 
 def main():
@@ -357,9 +364,13 @@ def main():
     # genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
     #                      False, NEAT.ActivationFunction.TANH, NEAT.ActivationFunction.TANH,
     #                      0, params)
-    genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, 1,
-                      False, NEAT.ActivationFunction.TANH, NEAT.ActivationFunction.TANH,
+    if hyper:
+        genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, 1,
+                      False, NEAT.ActivationFunction.UNSIGNED_SIGMOID, NEAT.ActivationFunction.UNSIGNED_SIGMOID,
                       0, params)
+    else:
+        genome = NEAT.Genome(0, 14 * 6, 0, 1, False, NEAT.ActivationFunction.UNSIGNED_SIGMOID,
+                        NEAT.ActivationFunction.UNSIGNED_SIGMOID, 0, params)
 
     pop1 = NEAT.Population(genome, params, True, 1.0, 0)
     pop1.RNG.Seed(rnd.randint(1,10000))
@@ -423,6 +434,8 @@ def main():
                     randomWins += 1
                 elif winner2 == 3:
                     randomWins += .5
+            # if (randomWins < 10):
+            #     randomWins /= 2.0
             fitnesses.append(randomWins)
             genome.SetFitness(randomWins)
 
