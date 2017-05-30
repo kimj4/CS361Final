@@ -75,6 +75,8 @@ def play(player1, player2, substrate, symmetry, printing, hyper):
         numMoves += 1
         if outcome != 0:
             winner = outcome
+            if (printing):
+                printGame(game.gameGrid)
             break
     return winner
 
@@ -246,8 +248,8 @@ def configureParams():
     params.DynamicCompatibility = True
     params.CompatTreshold = 2.0
     params.YoungAgeTreshold = 15
-    params.SpeciesMaxStagnation = 100
-    params.OldAgeTreshold = 35
+    params.SpeciesMaxStagnation = 3
+    params.OldAgeTreshold = 10
     params.EliteFraction = 0.1
 
     params.MinSpecies = 1 #changed
@@ -266,8 +268,8 @@ def configureParams():
 
     params.MutateActivationAProb = 0.0
     params.ActivationAMutationMaxPower = 0.5
-    params.MinActivationA = 0.05
-    params.MaxActivationA = 6.0
+    # params.MinActivationA = 0.05
+    # params.MaxActivationA = 6.0
 
     params.MutateNeuronActivationTypeProb = 0.03
 
@@ -383,47 +385,52 @@ def main():
         #     fitness = (gamesSoFar[i][0] + gamesSoFar[i][1] * .5) / games
         #     NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
 
+        # stringToWrite = str(generation) + ','
+        # # with open(output_file, "a") as f:
+        # #     f.write("==== Generation " + str(generation) + "====")
+        # fitnesses = []
+        # for genome in NEAT.GetGenomeList(pop1):
+        #     leftWins = 0
+        #     for j in range(10):
+        #         winner1 = play("Left", genome, substrate, symmetry, printGames, hyper)
+        #         winner2 = play(genome, "Left", substrate, symmetry, printGames, hyper)
+        #         if winner1 == 2:
+        #             leftWins += 1
+        #         elif winner1 == 3:
+        #             leftWins += .5
+        #         if winner2 == 1:
+        #             leftWins += 1
+        #         elif winner2 == 3:
+        #             leftWins += .5
+        #     fitnesses.append(leftWins)
+        #     genome.SetFitness(leftWins)
+
+
         stringToWrite = str(generation) + ','
         # with open(output_file, "a") as f:
         #     f.write("==== Generation " + str(generation) + "====")
         fitnesses = []
         for genome in NEAT.GetGenomeList(pop1):
-            leftWins = 0
+            randomWins = 0
             for j in range(10):
-                winner1 = play("Left", genome, substrate, symmetry, printGames, hyper)
-                winner2 = play(genome, "Left", substrate, symmetry, printGames, hyper)
+                winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
+                winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
                 if winner1 == 2:
-                    leftWins += 1
+                    randomWins += 1
                 elif winner1 == 3:
-                    leftWins += .5
+                    randomWins += .5
                 if winner2 == 1:
-                    leftWins += 1
+                    randomWins += 1
                 elif winner2 == 3:
-                    leftWins += .5
-            fitnesses.append(leftWins)
-            genome.SetFitness(leftWins)
+                    randomWins += .5
+            fitnesses.append(randomWins)
+            genome.SetFitness(randomWins)
 
-
-        bestIndividual = findBestIndividual(pop1)
-        # print ("Evaluating against players that stack on the left-most available column")
-        # print ("Generation " + str(generation) + ",  Fitness (20 games): " + str(bestIndividual.GetFitness()))
-
-        # randomWins = 0
-        # for i in range(7):
-        #     winner1 = play("Random",bestIndividual,substrate,symmetry,False,False)
-        #     winner2 = play(bestIndividual,"Random",substrate,symmetry,False,False)
-        #     if winner1 == 2:
-        #         randomWins += 1
-        #     elif winner1 == 3:
-        #         randomWins += .5
-        #     if winner2 == 1:
-        #         randomWins += 1
-        #     elif winner2 == 3:
-        #         randomWins += .5
-        #     print str(winner1==2)+" "+str(winner2==1)
         # output_file.write(str(generation)+","+str(randomWins)+"\n")
         # print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 14")
         # play("Human", findBestIndividual(pop1), substrate, symmetry, True, False)
+
+
         pop1.Epoch()
         end = time.time()
         stringToWrite = stringToWrite + str(min(fitnesses)) + ',' + str(sum(fitnesses) / len(fitnesses)) + ',' + str(max(fitnesses)) + ',' + str(end - begin) + '\n'
