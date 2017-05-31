@@ -291,18 +291,34 @@ def configureParams():
 
     params.MutateNeuronActivationTypeProb = 0.03
 
-    params.ActivationFunction_SignedSigmoid_Prob = 0.0
-    params.ActivationFunction_UnsignedSigmoid_Prob = 1.0
-    params.ActivationFunction_Tanh_Prob = 0.0
-    params.ActivationFunction_TanhCubic_Prob = 0.0
-    params.ActivationFunction_SignedStep_Prob = 0.0
-    params.ActivationFunction_UnsignedStep_Prob = 0.0
-    params.ActivationFunction_SignedGauss_Prob = 0.0
-    params.ActivationFunction_UnsignedGauss_Prob = 1.0
-    params.ActivationFunction_Abs_Prob = 0.0
-    params.ActivationFunction_SignedSine_Prob = 0.0
-    params.ActivationFunction_UnsignedSine_Prob = 1.0
-    params.ActivationFunction_Linear_Prob = 1.0
+    params.ActivationFunction_SignedSigmoid_Prob = 1.0;
+    params.ActivationFunction_UnsignedSigmoid_Prob = 1.0;
+    params.ActivationFunction_Tanh_Prob = 1.0;
+    params.ActivationFunction_TanhCubic_Prob = 1.0;
+    params.ActivationFunction_SignedStep_Prob = 1.0;
+    params.ActivationFunction_UnsignedStep_Prob = 1.0;
+    params.ActivationFunction_SignedGauss_Prob = 1.0;
+    params.ActivationFunction_UnsignedGauss_Prob = 1.0;
+    params.ActivationFunction_Abs_Prob = 1.0;
+    params.ActivationFunction_SignedSine_Prob = 1.0;
+    params.ActivationFunction_UnsignedSine_Prob = 1.0;
+    params.ActivationFunction_Linear_Prob = 1.0;
+    params.ActivationFunction_Relu_Prob = 1.0;
+    params.ActivationFunction_Softplus_Prob = 1.0;
+
+    # 
+    # params.ActivationFunction_SignedSigmoid_Prob = 0.0
+    # params.ActivationFunction_UnsignedSigmoid_Prob = 1.0
+    # params.ActivationFunction_Tanh_Prob = 0.0
+    # params.ActivationFunction_TanhCubic_Prob = 0.0
+    # params.ActivationFunction_SignedStep_Prob = 0.0
+    # params.ActivationFunction_UnsignedStep_Prob = 0.0
+    # params.ActivationFunction_SignedGauss_Prob = 0.0
+    # params.ActivationFunction_UnsignedGauss_Prob = 1.0
+    # params.ActivationFunction_Abs_Prob = 0.0
+    # params.ActivationFunction_SignedSine_Prob = 0.0
+    # params.ActivationFunction_UnsignedSine_Prob = 1.0
+    # params.ActivationFunction_Linear_Prob = 1.0
     # params.ActivationFunction_SignedSigmoid_Prob = 0.0
     # params.ActivationFunction_UnsignedSigmoid_Prob = 1.0
     # params.ActivationFunction_Tanh_Prob = 0.0
@@ -341,6 +357,27 @@ def configureSubstrate():
 
     # substrate.m_max_weight_and_bias = 8.0
     return substrate
+
+def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper):
+    ''' Evaluates every individual against numCycles * 2 number of random
+    players. Each cycle contains 2 games where each player get to go first.
+    '''
+    randomWinList = []
+    for genome in NEAT.GetGenomeList(pop):
+        randomWins = 0
+        # Playing games against random players
+        for j in range(10):
+            winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
+            winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
+            if winner1 == 2:
+                randomWins += 1
+            elif winner1 == 3:
+                randomWins += .5
+            if winner2 == 1:
+                randomWins += 1
+            elif winner2 == 3:
+                randomWins += .5
+        randomWinList.append(randomWins)
 
 
 
