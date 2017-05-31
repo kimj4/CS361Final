@@ -1,3 +1,0 @@
-symmetry: False
-HyperNEAT: True
-Gen | Min | Avg | Max | RunTime

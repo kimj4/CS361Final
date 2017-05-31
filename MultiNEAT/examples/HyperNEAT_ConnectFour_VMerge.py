@@ -456,22 +456,23 @@ def main():
                 elif winner2 == 3:
                     randomWins += .5
 
-            # Play games against each other
-            competeWins = 0
-            for otherGenome in NEAT.GetGenomeList(pop1):
-                if (rnd.uniform(0,1) < .3):
-                    winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
-                    winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
-                    if winner1 == 2:
-                        competeWins += 1
-                    elif winner1 == 3:
-                        competeWins += .5
-                    if winner2 == 1:
-                        competeWins += 1
-                    elif winner2 == 3:
-                        competeWins += .5
+            # # Play games against each other
+            # competeWins = 0
+            # for otherGenome in NEAT.GetGenomeList(pop1):
+            #     if (rnd.uniform(0,1) < .3):
+            #         winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
+            #         winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
+            #         if winner1 == 2:
+            #             competeWins += 1
+            #         elif winner1 == 3:
+            #             competeWins += .5
+            #         if winner2 == 1:
+            #             competeWins += 1
+            #         elif winner2 == 3:
+            #             competeWins += .5
 
-            fitness = randomWins + competeWins
+            # fitness = randomWins + competeWins
+            fitness = randomWins
             fitnesses.append(fitness)
             genome.SetFitness(fitness)
 
