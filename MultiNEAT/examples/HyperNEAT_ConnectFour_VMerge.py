@@ -257,6 +257,8 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
     gamesSoFar[genomeNum][2]+=p2wins
 
 def configureParams():
+    ''' Set the parameters that we need.
+    '''
     params = NEAT.Parameters()
     params.PopulationSize = 25 #changed
     params.TournamentSize = 4 #changed
@@ -370,59 +372,14 @@ def main():
 
     params = configureParams()
     substrate = configureSubstrate()
-    with open(output_file, "w") as f:
+    params.Save(output_file)
+    with open(output_file, "a") as f:
+        # params.Save(f)
+        f.write("\nCommand line parameters\n")
         f.write("symmetry: " + str(bool(symmetry)) + "\n")
         f.write("HyperNEAT: " + str(bool(hyper)) + "\n")
         f.write("Gen | Min | Avg | Max | RunTime\n")
-
-        f.write("PopulationSize: "+ str(params.PopulationSize) + "\n")
-        f.write("TournamentSize: "+ str(params.TournamentSize) + "\n")
-
-        f.write("DynamicCompatibility: "+ str(params.DynamicCompatibility) + "\n")
-        f.write("CompatTreshold: "+ str(params.CompatTreshold) + "\n")
-        f.write("YoungAgeTreshold: "+ str(params.YoungAgeTreshold) + "\n")
-        f.write("SpeciesMaxStagnation: "+ str(params.SpeciesMaxStagnation) + "\n")
-        f.write("OldAgeTreshold: "+ str(params.OldAgeTreshold) + "\n")
-        f.write("EliteFraction: "+ str(params.EliteFraction) + "\n")
-
-        f.write("MinSpecies: "+ str(params.MinSpecies) + "\n")
-        f.write("MaxSpecies: "+ str(params.MaxSpecies) + "\n")
-        f.write("RouletteWheelSelection: "+ str(params.RouletteWheelSelection) + "\n")
-
-        f.write("MutateRemLinkProb: "+ str(params.MutateRemLinkProb) + "\n")
-        f.write("RecurrentProb: "+ str(params.RecurrentProb) + "\n")
-        f.write("OverallMutationRate: "+ str(params.OverallMutationRate) + "\n")
-        f.write("MutateAddLinkProb: "+ str(params.MutateAddLinkProb) + "\n")
-        f.write("MutateAddNeuronProb: "+ str(params.MutateAddNeuronProb) + "\n")
-        f.write("MutateWeightsProb: "+ str(params.MutateWeightsProb) + "\n")
-        f.write("MaxWeight: "+ str(params.MaxWeight) + "\n")
-        f.write("WeightMutationMaxPower: "+ str(params.WeightMutationMaxPower) + "\n")
-        f.write("WeightReplacementMaxPower: "+ str(params.WeightReplacementMaxPower) + "\n")
-
-        f.write("MutateActivationAProb: "+ str(params.MutateActivationAProb) + "\n")
-        f.write("ActivationAMutationMaxPower: "+ str(params.ActivationAMutationMaxPower) + "\n")
-        f.write("MinActivationA: "+ str(params.MinActivationA) + "\n")
-        f.write("MaxActivationA: "+ str(params.MaxActivationA) + "\n")
-
-        f.write("MutateNeuronActivationTypeProb :"+ str(params.MutateNeuronActivationTypeProb) + "\n")
-
-        f.write("ActivationFunction_SignedSigmoid_Prob: "+ str(params.ActivationFunction_SignedSigmoid_Prob) + "\n")
-        f.write("ActivationFunction_UnsignedSigmoid_Prob: "+ str(params.ActivationFunction_UnsignedSigmoid_Prob) + "\n")
-        f.write("ActivationFunction_Tanh_Prob: "+ str(params.ActivationFunction_Tanh_Prob) + "\n")
-        f.write("ActivationFunction_TanhCubic_Prob "+ str(params.ActivationFunction_TanhCubic_Prob) + "\n")
-        f.write("ActivationFunction_SignedStep_Prob: "+ str(params.ActivationFunction_SignedStep_Prob) + "\n")
-        f.write("ActivationFunction_UnsignedStep_Prob: "+ str(params.ActivationFunction_UnsignedStep_Prob) + "\n")
-        f.write("ActivationFunction_SignedGauss_Prob: "+ str(params.ActivationFunction_SignedGauss_Prob) + "\n")
-        f.write("ActivationFunction_UnsignedGauss_Prob: "+ str(params.ActivationFunction_UnsignedGauss_Prob) + "\n")
-        f.write("ActivationFunction_Abs_Prob: "+ str(params.ActivationFunction_Abs_Prob) + "\n")
-        f.write("ActivationFunction_SignedSine_Prob: "+ str(params.ActivationFunction_SignedSine_Prob) + "\n")
-        f.write("ActivationFunction_UnsignedSine_Prob: "+ str(params.ActivationFunction_UnsignedSine_Prob) + "\n")
-        f.write("ActivationFunction_Linear_Prob: "+ str(params.ActivationFunction_Linear_Prob) + "\n")
-        f.write("ActivationFunction_SignedSigmoid_Prob: "+ str(params.ActivationFunction_SignedSigmoid_Prob) + "\n")
-        f.write("ActivationFunction_UnsignedSigmoid_Prob: "+ str(params.ActivationFunction_UnsignedSigmoid_Prob) + "\n")
-        f.write("ActivationFunction_Tanh_Prob: "+ str(params.ActivationFunction_Tanh_Prob) + "\n")
-        f.write("ActivationFunction_SignedStep_Prob: "+ str(params.ActivationFunction_SignedStep_Prob) + "\n")
-
+    print("done saving ")
 
 
     # genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
@@ -481,12 +438,12 @@ def main():
         #     genome.SetFitness(leftWins)
 
 
-        stringToWrite = "generation" +  str(generation) + ','
-        # with open(output_file, "a") as f:
-        #     f.write("==== Generation " + str(generation) + "====")
+        stringToWrite = str(generation) + ','
+
         fitnesses = []
         for genome in NEAT.GetGenomeList(pop1):
             randomWins = 0
+            # Playing games against random players
             for j in range(10):
                 winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
                 winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
@@ -498,15 +455,25 @@ def main():
                     randomWins += 1
                 elif winner2 == 3:
                     randomWins += .5
-            # if (randomWins < 10):
-            #     randomWins /= 2.0
-            fitnesses.append(randomWins)
-            genome.SetFitness(randomWins)
 
-        # output_file.write(str(generation)+","+str(randomWins)+"\n")
-        # print("gen "+str(generation)+" beats random "+str(randomWins)+" out of 14")
-        # play("Human", findBestIndividual(pop1), substrate, symmetry, True, False)
+            # Play games against each other
+            competeWins = 0
+            for otherGenome in NEAT.GetGenomeList(pop1):
+                if (rnd.uniform(0,1) < .3):
+                    winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
+                    winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
+                    if winner1 == 2:
+                        competeWins += 1
+                    elif winner1 == 3:
+                        competeWins += .5
+                    if winner2 == 1:
+                        competeWins += 1
+                    elif winner2 == 3:
+                        competeWins += .5
 
+            fitness = randomWins + competeWins
+            fitnesses.append(fitness)
+            genome.SetFitness(fitness)
 
         pop1.Epoch()
         end = time.time()
@@ -514,16 +481,10 @@ def main():
         with open(output_file, "a") as f:
             f.write(stringToWrite)
         print(stringToWrite)
-#
-# def test():
-#     game = Game();
-#     game.makeMove(1, 0);
-#     printGame(game.gameGrid);
-#     tree = GameTree(1, game, 2);
-#
-#     printGame(tree.getPMAt(0).gameState)
-#     vectorPrint(tree.getPMAt(0).getInputFormatVec(2));
-#     vectorPrint(tree.getPMAt(0).getInputFormatVecMirrored(2));
 
+def test():
+    params = configureParams
+    for thin in vars(params):
+        print(thin)
 main()
 # test()
