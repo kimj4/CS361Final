@@ -10,6 +10,7 @@ import sys
 import time
 import random as rnd
 import subprocess as comm
+import pickle
 # import Random
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -22,7 +23,7 @@ import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
 import ConnectFour2
-from ConnectFour2 import Game, GameTree, PossibleMove, printGame, vectorPrint
+from ConnectFour2 import Game, GameTree, PossibleMove, printGame, vectorPrint, printInputMatrix
 
 def play(player1, player2, substrate, symmetry, printing, hyper):
     game = Game()
@@ -406,6 +407,8 @@ def main():
     symmetry = int(sys.argv[2])
     printGames = int(sys.argv[3])
     hyper = int(sys.argv[4])
+    genome_save_point = sys.argv[5]
+    # genome_save_generation = int(sys.argv[6])
 
     params = configureParams()
     substrate = configureSubstrate()
@@ -454,9 +457,7 @@ def main():
         #     fitness = (gamesSoFar[i][0] + gamesSoFar[i][1] * .5) / games
         #     NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
 
-        # stringToWrite = str(generation) + ','
-        # # with open(output_file, "a") as f:
-        # #     f.write("==== Generation " + str(generation) + "====")
+        stringToWrite = str(generation) + ','
         # fitnesses = []
         # for genome in NEAT.GetGenomeList(pop1):
         #     leftWins = 0
@@ -475,41 +476,40 @@ def main():
         #     genome.SetFitness(leftWins)
 
 
-        stringToWrite = str(generation) + ','
 
         fitnesses = []
         for genome in NEAT.GetGenomeList(pop1):
-            # randomWins = 0
-            # # Playing games against random players
-            # for j in range(10):
-            #     winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
-            #     winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
-            #     if winner1 == 2:
-            #         randomWins += 1
-            #     elif winner1 == 3:
-            #         randomWins += .5
-            #     if winner2 == 1:
-            #         randomWins += 1
-            #     elif winner2 == 3:
-            #         randomWins += .5
+            randomWins = 0
+            # Playing games against random players
+            for j in range(10):
+                winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
+                winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
+                if winner1 == 2:
+                    randomWins += 1
+                elif winner1 == 3:
+                    randomWins += .5
+                if winner2 == 1:
+                    randomWins += 1
+                elif winner2 == 3:
+                    randomWins += .5
 
             # Play games against each other
-            competeWins = 0
-            numGames = 0
-            while(numGames < 10):
-                playeridx = rnd.randint(0,len(NEAT.GetGenomeList(pop1)) - 1)
-                otherGenome = NEAT.GetGenomeList(pop1)[playeridx]
-                winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
-                winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
-                if winner1 == 2:
-                    competeWins += 1
-                elif winner1 == 3:
-                    competeWins += .5
-                if winner2 == 1:
-                    competeWins += 1
-                elif winner2 == 3:
-                    competeWins += .5
-                numGames += 1
+            # competeWins = 0
+            # numGames = 0
+            # while(numGames < 10):
+            #     playeridx = rnd.randint(0,len(NEAT.GetGenomeList(pop1)) - 1)
+            #     otherGenome = NEAT.GetGenomeList(pop1)[playeridx]
+            #     winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
+            #     winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
+            #     if winner1 == 2:
+            #         competeWins += 1
+            #     elif winner1 == 3:
+            #         competeWins += .5
+            #     if winner2 == 1:
+            #         competeWins += 1
+            #     elif winner2 == 3:
+            #         competeWins += .5
+            #     numGames += 1
 
 
             # # Play games against each other
@@ -527,8 +527,23 @@ def main():
             #         elif winner2 == 3:
             #             competeWins += .5
 
-            # fitness = randomWins + competeWins
+            # fitness = randomWins + com# fitnesses = []
+        # for genome in NEAT.GetGenomeList(pop1):
+        #     randomWins = 0
+        #     # Playing games against random players
+        #     for j in range(10):
+        #         winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
+        #         winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
+        #         if winner1 == 2:
+        #             randomWins += 1
+        #         elif winner1 == 3:
+        #             randomWins += .5
+        #         if winner2 == 1:
+        #             randomWins += 1
+        #         elif winner2 == 3:
+        #             randomWins += .5peteWins
             fitness = randomWins
+            # fitness = leftWins
             fitnesses.append(fitness)
             genome.SetFitness(fitness)
 
@@ -539,9 +554,15 @@ def main():
             f.write(stringToWrite)
         print(stringToWrite)
 
+    # after evaluations are done, find and store best individual
+    with open(genome_save_point, 'w') as f:
+        pickle.dump(findBestIndividual(pop1), f)
+
+
 def test():
-    params = configureParams
-    for thin in vars(params):
-        print(thin)
+    substrate = configureSubstrate()
+    params = configureParams()
+    mygenome = pickle.load('genome.txt')
+    play(mygenome, "human", substrate, False, True, False)
 main()
 # test()
