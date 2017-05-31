@@ -86,13 +86,12 @@ def makeMove(player, playerNet, game, symmetry):
     worth.
     TODO: add different workings for using symmetry
     '''
-    if symmetry:
-        gameTree = GameTree(1, game, player)
-    else:
-        gameTree = GameTree(1, game, player)
+    gameTree = GameTree(1, game, player)
+
     outputList = []
 
     for i in range(gameTree.length()):
+        # executed for all
         iList = gameTree.getPMAt(i).getInputFormatVec(player)
         line = []
         for a in iList:
@@ -101,10 +100,27 @@ def makeMove(player, playerNet, game, symmetry):
         playerNet.Flush()
         playerNet.Input(line)
         playerNet.Activate()
+        playerNet.Activate()
+        playerNet.Activate()
         # output list is size 1
         for output in playerNet.Output():
             outputList.append(output)
-    print(outputList)
+
+        if (symmetry):
+            iList = gameTree.getPMAt(i).getInputFormatVecMirrored(player)
+            line = []
+            for a in iList:
+                line.append(a)
+
+            playerNet.Flush()
+            playerNet.Input(line)
+            playerNet.Activate()
+            playerNet.Activate()
+            playerNet.Activate()
+            # output list is size 1
+            for output in playerNet.Output():
+                outputList.append(output)
+    # print(outputList)
     # print(len(outputList))
 
     bestIndexSoFar = -1
@@ -273,22 +289,22 @@ def configureParams():
 
     params.MutateNeuronActivationTypeProb = 0.03
 
-    # params.ActivationFunction_SignedSigmoid_Prob = 0.0
-    # params.ActivationFunction_UnsignedSigmoid_Prob = 0.0
-    # params.ActivationFunction_Tanh_Prob = 1.0
-    # params.ActivationFunction_TanhCubic_Prob = 0.0
-    # params.ActivationFunction_SignedStep_Prob = 1.0
-    # params.ActivationFunction_UnsignedStep_Prob = 0.0
-    # params.ActivationFunction_SignedGauss_Prob = 1.0
-    # params.ActivationFunction_UnsignedGauss_Prob = 0.0
-    # params.ActivationFunction_Abs_Prob = 0.0
-    # params.ActivationFunction_SignedSine_Prob = 1.0
-    # params.ActivationFunction_UnsignedSine_Prob = 0.0
-    # params.ActivationFunction_Linear_Prob = 1.0
     params.ActivationFunction_SignedSigmoid_Prob = 0.0
     params.ActivationFunction_UnsignedSigmoid_Prob = 1.0
     params.ActivationFunction_Tanh_Prob = 0.0
+    params.ActivationFunction_TanhCubic_Prob = 0.0
     params.ActivationFunction_SignedStep_Prob = 0.0
+    params.ActivationFunction_UnsignedStep_Prob = 0.0
+    params.ActivationFunction_SignedGauss_Prob = 0.0
+    params.ActivationFunction_UnsignedGauss_Prob = 1.0
+    params.ActivationFunction_Abs_Prob = 0.0
+    params.ActivationFunction_SignedSine_Prob = 0.0
+    params.ActivationFunction_UnsignedSine_Prob = 1.0
+    params.ActivationFunction_Linear_Prob = 1.0
+    # params.ActivationFunction_SignedSigmoid_Prob = 0.0
+    # params.ActivationFunction_UnsignedSigmoid_Prob = 1.0
+    # params.ActivationFunction_Tanh_Prob = 0.0
+    # params.ActivationFunction_SignedStep_Prob = 0.0
 
     params.AllowLoops = False
     return params
@@ -352,14 +368,62 @@ def main():
     printGames = int(sys.argv[3])
     hyper = int(sys.argv[4])
 
+    params = configureParams()
+    substrate = configureSubstrate()
     with open(output_file, "w") as f:
         f.write("symmetry: " + str(bool(symmetry)) + "\n")
         f.write("HyperNEAT: " + str(bool(hyper)) + "\n")
         f.write("Gen | Min | Avg | Max | RunTime\n")
 
+        f.write("PopulationSize: "+ str(params.PopulationSize) + "\n")
+        f.write("TournamentSize: "+ str(params.TournamentSize) + "\n")
 
-    params = configureParams()
-    substrate = configureSubstrate()
+        f.write("DynamicCompatibility: "+ str(params.DynamicCompatibility) + "\n")
+        f.write("CompatTreshold: "+ str(params.CompatTreshold) + "\n")
+        f.write("YoungAgeTreshold: "+ str(params.YoungAgeTreshold) + "\n")
+        f.write("SpeciesMaxStagnation: "+ str(params.SpeciesMaxStagnation) + "\n")
+        f.write("OldAgeTreshold: "+ str(params.OldAgeTreshold) + "\n")
+        f.write("EliteFraction: "+ str(params.EliteFraction) + "\n")
+
+        f.write("MinSpecies: "+ str(params.MinSpecies) + "\n")
+        f.write("MaxSpecies: "+ str(params.MaxSpecies) + "\n")
+        f.write("RouletteWheelSelection: "+ str(params.RouletteWheelSelection) + "\n")
+
+        f.write("MutateRemLinkProb: "+ str(params.MutateRemLinkProb) + "\n")
+        f.write("RecurrentProb: "+ str(params.RecurrentProb) + "\n")
+        f.write("OverallMutationRate: "+ str(params.OverallMutationRate) + "\n")
+        f.write("MutateAddLinkProb: "+ str(params.MutateAddLinkProb) + "\n")
+        f.write("MutateAddNeuronProb: "+ str(params.MutateAddNeuronProb) + "\n")
+        f.write("MutateWeightsProb: "+ str(params.MutateWeightsProb) + "\n")
+        f.write("MaxWeight: "+ str(params.MaxWeight) + "\n")
+        f.write("WeightMutationMaxPower: "+ str(params.WeightMutationMaxPower) + "\n")
+        f.write("WeightReplacementMaxPower: "+ str(params.WeightReplacementMaxPower) + "\n")
+
+        f.write("MutateActivationAProb: "+ str(params.MutateActivationAProb) + "\n")
+        f.write("ActivationAMutationMaxPower: "+ str(params.ActivationAMutationMaxPower) + "\n")
+        f.write("MinActivationA: "+ str(params.MinActivationA) + "\n")
+        f.write("MaxActivationA: "+ str(params.MaxActivationA) + "\n")
+
+        f.write("MutateNeuronActivationTypeProb :"+ str(params.MutateNeuronActivationTypeProb) + "\n")
+
+        f.write("ActivationFunction_SignedSigmoid_Prob: "+ str(params.ActivationFunction_SignedSigmoid_Prob) + "\n")
+        f.write("ActivationFunction_UnsignedSigmoid_Prob: "+ str(params.ActivationFunction_UnsignedSigmoid_Prob) + "\n")
+        f.write("ActivationFunction_Tanh_Prob: "+ str(params.ActivationFunction_Tanh_Prob) + "\n")
+        f.write("ActivationFunction_TanhCubic_Prob "+ str(params.ActivationFunction_TanhCubic_Prob) + "\n")
+        f.write("ActivationFunction_SignedStep_Prob: "+ str(params.ActivationFunction_SignedStep_Prob) + "\n")
+        f.write("ActivationFunction_UnsignedStep_Prob: "+ str(params.ActivationFunction_UnsignedStep_Prob) + "\n")
+        f.write("ActivationFunction_SignedGauss_Prob: "+ str(params.ActivationFunction_SignedGauss_Prob) + "\n")
+        f.write("ActivationFunction_UnsignedGauss_Prob: "+ str(params.ActivationFunction_UnsignedGauss_Prob) + "\n")
+        f.write("ActivationFunction_Abs_Prob: "+ str(params.ActivationFunction_Abs_Prob) + "\n")
+        f.write("ActivationFunction_SignedSine_Prob: "+ str(params.ActivationFunction_SignedSine_Prob) + "\n")
+        f.write("ActivationFunction_UnsignedSine_Prob: "+ str(params.ActivationFunction_UnsignedSine_Prob) + "\n")
+        f.write("ActivationFunction_Linear_Prob: "+ str(params.ActivationFunction_Linear_Prob) + "\n")
+        f.write("ActivationFunction_SignedSigmoid_Prob: "+ str(params.ActivationFunction_SignedSigmoid_Prob) + "\n")
+        f.write("ActivationFunction_UnsignedSigmoid_Prob: "+ str(params.ActivationFunction_UnsignedSigmoid_Prob) + "\n")
+        f.write("ActivationFunction_Tanh_Prob: "+ str(params.ActivationFunction_Tanh_Prob) + "\n")
+        f.write("ActivationFunction_SignedStep_Prob: "+ str(params.ActivationFunction_SignedStep_Prob) + "\n")
+
+
 
     # genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
     #                      False, NEAT.ActivationFunction.TANH, NEAT.ActivationFunction.TANH,
@@ -417,7 +481,7 @@ def main():
         #     genome.SetFitness(leftWins)
 
 
-        stringToWrite = str(generation) + ','
+        stringToWrite = "generation" +  str(generation) + ','
         # with open(output_file, "a") as f:
         #     f.write("==== Generation " + str(generation) + "====")
         fitnesses = []
@@ -450,7 +514,7 @@ def main():
         with open(output_file, "a") as f:
             f.write(stringToWrite)
         print(stringToWrite)
-# 
+#
 # def test():
 #     game = Game();
 #     game.makeMove(1, 0);
