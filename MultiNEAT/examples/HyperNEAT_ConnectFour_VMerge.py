@@ -442,36 +442,40 @@ def main():
 
         fitnesses = []
         for genome in NEAT.GetGenomeList(pop1):
-            randomWins = 0
-            # Playing games against random players
-            for j in range(10):
-                winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
-                winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
-                if winner1 == 2:
-                    randomWins += 1
-                elif winner1 == 3:
-                    randomWins += .5
-                if winner2 == 1:
-                    randomWins += 1
-                elif winner2 == 3:
-                    randomWins += .5
+            # randomWins = 0
+            # # Playing games against random players
+            # for j in range(10):
+            #     winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
+            #     winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
+            #     if winner1 == 2:
+            #         randomWins += 1
+            #     elif winner1 == 3:
+            #         randomWins += .5
+            #     if winner2 == 1:
+            #         randomWins += 1
+            #     elif winner2 == 3:
+            #         randomWins += .5
 
             # Play games against each other
             competeWins = 0
-            for otherGenome in NEAT.GetGenomeList(pop1):
-                if (rnd.uniform(0,1) < .3):
-                    winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
-                    winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
-                    if winner1 == 2:
-                        competeWins += 1
-                    elif winner1 == 3:
-                        competeWins += .5
-                    if winner2 == 1:
-                        competeWins += 1
-                    elif winner2 == 3:
-                        competeWins += .5
+            numGames = 0
+            while(numGames < 10):
+                playeridx = rnd.randint(0,len(NEAT.GetGenomeList(pop1)) - 1)
+                otherGenome = NEAT.GetGenomeList(pop1)[playeridx]
+                winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
+                winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
+                if winner1 == 2:
+                    competeWins += 1
+                elif winner1 == 3:
+                    competeWins += .5
+                if winner2 == 1:
+                    competeWins += 1
+                elif winner2 == 3:
+                    competeWins += .5
+                numGames += 1
 
-            fitness = randomWins + competeWins
+            # fitness = randomWins + competeWins
+            fitness = competeWins
             fitnesses.append(fitness)
             genome.SetFitness(fitness)
 
