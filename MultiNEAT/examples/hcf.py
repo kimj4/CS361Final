@@ -104,8 +104,11 @@ def makeMove(player, playerNet, game, symmetry):
         playerNet.Activate()
         playerNet.Activate()
         # output list is size 1
+        # a = []
         for output in playerNet.Output():
             outputList.append(output)
+            # a.append(output)
+        # print(a)
 
         if (symmetry):
             iList = gameTree.getPMAt(i).getInputFormatVecMirrored(player)
@@ -383,16 +386,6 @@ def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper):
 
 
 def main():
-    # TODO: make standarized fitness function
-    # TODO: make standarized logging
-    #   What to include?
-    #       - Generations' win rates against random
-    #       - Generations' win rates against specific strategies
-    #       - Generations' win rates against each other?
-    #       - Average fitness
-    #       - Max fitness
-    #       - Min fitness
-    # TODO: store genomes to file and be able to recall them.
 
     if (len(sys.argv) < 4):
         print("Two command line arguments expected.")
@@ -400,43 +393,40 @@ def main():
         print("0 for no symmetry, 1 for symmetry")
         print("0 to silence games, 1 to view games")
         print("0 for NEAT, 1 for HyperNEAT")
+        print("file to store the best individual in")
+        print("generation number at which the best individual is stored")
         return
 
-    # output_file = open(sys.argv[1], "w")
     output_file = sys.argv[1]
     symmetry = int(sys.argv[2])
     printGames = int(sys.argv[3])
     hyper = int(sys.argv[4])
     genome_save_point = sys.argv[5]
-    # genome_save_generation = int(sys.argv[6])
+    genome_save_generation = int(sys.argv[6])
 
     params = configureParams()
     substrate = configureSubstrate()
     params.Save(output_file)
     with open(output_file, "a") as f:
-        # params.Save(f)
         f.write("\nCommand line parameters\n")
         f.write("symmetry: " + str(bool(symmetry)) + "\n")
         f.write("HyperNEAT: " + str(bool(hyper)) + "\n")
         f.write("Gen | Min | Avg | Max | RunTime\n")
     print("done saving ")
 
-
-    # genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
-    #                      False, NEAT.ActivationFunction.TANH, NEAT.ActivationFunction.TANH,
-    #                      0, params)
     if hyper:
-        genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, 1,
+        genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
                       False, NEAT.ActivationFunction.UNSIGNED_SIGMOID, NEAT.ActivationFunction.UNSIGNED_SIGMOID,
                       0, params)
     else:
         genome = NEAT.Genome(0, 14 * 6, 0, 1, False, NEAT.ActivationFunction.UNSIGNED_SIGMOID,
                         NEAT.ActivationFunction.UNSIGNED_SIGMOID, 0, params)
 
-    pop1 = NEAT.Population(genome, params, True, 1.0, 0)
-    pop1.RNG.Seed(rnd.randint(1,10000))
+    # use current time as the random seed
+    pop1 = NEAT.Population(genome, params, True, 1.0, int(time.time()))
+    numGens = 100
 
-    for generation in range(100):
+    for generation in range(numGens):
         begin = time.time()
         gameMatrix = []
         gamesSoFar = []
@@ -458,6 +448,7 @@ def main():
         #     NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
 
         stringToWrite = str(generation) + ','
+        ### players that go on the leftmost available column ###
         # fitnesses = []
         # for genome in NEAT.GetGenomeList(pop1):
         #     leftWins = 0
@@ -476,7 +467,7 @@ def main():
         #     genome.SetFitness(leftWins)
 
 
-
+        ### players that go in random columns ###
         fitnesses = []
         for genome in NEAT.GetGenomeList(pop1):
             randomWins = 0
@@ -493,55 +484,6 @@ def main():
                 elif winner2 == 3:
                     randomWins += .5
 
-            # Play games against each other
-            # competeWins = 0
-            # numGames = 0
-            # while(numGames < 10):
-            #     playeridx = rnd.randint(0,len(NEAT.GetGenomeList(pop1)) - 1)
-            #     otherGenome = NEAT.GetGenomeList(pop1)[playeridx]
-            #     winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
-            #     winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
-            #     if winner1 == 2:
-            #         competeWins += 1
-            #     elif winner1 == 3:
-            #         competeWins += .5
-            #     if winner2 == 1:
-            #         competeWins += 1
-            #     elif winner2 == 3:
-            #         competeWins += .5
-            #     numGames += 1
-
-
-            # # Play games against each other
-            # competeWins = 0
-            # for otherGenome in NEAT.GetGenomeList(pop1):
-            #     if (rnd.uniform(0,1) < .3):
-            #         winner1 = play(genome, otherGenome, substrate, symmetry, printGames, hyper)
-            #         winner2 = play(otherGenome, genome, substrate, symmetry, printGames, hyper)
-            #         if winner1 == 2:
-            #             competeWins += 1
-            #         elif winner1 == 3:
-            #             competeWins += .5
-            #         if winner2 == 1:
-            #             competeWins += 1
-            #         elif winner2 == 3:
-            #             competeWins += .5
-
-            # fitness = randomWins + com# fitnesses = []
-        # for genome in NEAT.GetGenomeList(pop1):
-        #     randomWins = 0
-        #     # Playing games against random players
-        #     for j in range(10):
-        #         winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
-        #         winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
-        #         if winner1 == 2:
-        #             randomWins += 1
-        #         elif winner1 == 3:
-        #             randomWins += .5
-        #         if winner2 == 1:
-        #             randomWins += 1
-        #         elif winner2 == 3:
-        #             randomWins += .5peteWins
             fitness = randomWins
             # fitness = leftWins
             fitnesses.append(fitness)
@@ -562,7 +504,8 @@ def main():
 def test():
     substrate = configureSubstrate()
     params = configureParams()
-    mygenome = pickle.load('genome.txt')
-    play(mygenome, "human", substrate, False, True, False)
+    with open('genome.txt', 'r') as f:
+        mygenome = pickle.load(f)
+    play(mygenome, "Human", substrate, False, True, False)
 main()
 # test()
