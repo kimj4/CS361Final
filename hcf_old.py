@@ -106,6 +106,7 @@ def makeMove(player, playerNet, game, symmetry):
         # output list is size 1
         for output in playerNet.Output():
             outputList.append(output)
+        print (playerNet.Output())
 
         if (symmetry):
             iList = gameTree.getPMAt(i).getInputFormatVecMirrored(player)
