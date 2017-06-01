@@ -88,27 +88,25 @@ def makeMove(player, playerNet, game, symmetry):
     TODO: add different workings for using symmetry
     '''
     gameTree = GameTree(1, game, player)
-
     outputList = []
-
+    repeats = 5
     for i in range(gameTree.length()):
+
         # executed for all
         iList = gameTree.getPMAt(i).getInputFormatVec(player)
         line = []
-        for a in iList:
-            line.append(a)
 
         playerNet.Flush()
         playerNet.Input(line)
-        playerNet.Activate()
-        playerNet.Activate()
-        playerNet.Activate()
-        # output list is size 1
-        # a = []
+        [playerNet.Activate() for _ in range(repeats)]
+
+        # tempOutput = []
         for output in playerNet.Output():
             outputList.append(output)
-            # a.append(output)
-        # print(a)
+            # tempOutput.append(output)
+        # print("Number of things in the output: %s" % len(tempOutput))
+
+
 
         if (symmetry):
             iList = gameTree.getPMAt(i).getInputFormatVecMirrored(player)
