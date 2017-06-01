@@ -518,9 +518,10 @@ def main():
             f.write(stringToWrite)
         print(stringToWrite)
 
-    # after evaluations are done, find and store best individual
-    with open(genome_save_point, 'w') as f:
-        pickle.dump(findBestIndividual(pop1), f)
+        # at the point where the genomes should be saved, save the whole population
+        if (generation == genome_save_point):
+            with open(genome_save_point, 'w') as f:
+                pickle.dump(NEAT.GetGenomeList(pop1), f)
 
 
 def test():
