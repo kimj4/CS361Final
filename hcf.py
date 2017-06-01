@@ -18,7 +18,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 # sys.path.insert(0, '/Accounts/kimj4/CS361Final')
 # sys.path.insert(0, '/accounts/sharpeg/CS361Final')
 # sys.path.insert(0, '/home/ubuntu/CS361Final')
-sys.path.insert(0, '/home/juyun/CS361Final')
+#sys.path.insert(0, '/home/juyun/CS361Final')
+sys.path.insert(0, '/home/test/CS361Final')
 import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
@@ -29,12 +30,14 @@ def play(player1, player2, substrate, symmetry, printing, hyper, depth):
     game = Game()
     if isinstance(player1, NEAT.Genome):
         player1Net = NEAT.NeuralNetwork()
+        player1Net.SetInputOutputDimentions(6*14, 10)
         if hyper:
             player1.BuildHyperNEATPhenotype(player1Net,substrate)
         else:
             player1.BuildPhenotype(player1Net)
     if isinstance(player2, NEAT.Genome):
         player2Net = NEAT.NeuralNetwork()
+        player2Net.SetInputOutputDimentions(6*14, 10)
         if hyper:
             player2.BuildHyperNEATPhenotype(player2Net,substrate)
         else:
@@ -89,23 +92,28 @@ def makeMove(player, playerNet, game, symmetry, depth):
     '''
     gameTree = GameTree(depth, game, player)
     outputList = []
-    repeats = 5
+    repeats = 3
     for i in range(gameTree.length()):
 
         # executed for all
         iList = gameTree.getPMAt(i).getInputFormatVec(player)
         line = []
+        for a in iList:
+            line.append(a)
+
+        output2 = 100000
 
         playerNet.Flush()
         playerNet.Input(line)
         [playerNet.Activate() for _ in range(repeats)]
 
-        # tempOutput = []
+        tempOutput = []
         for output in playerNet.Output():
-            outputList.append(output)
-            # tempOutput.append(output)
-        # print("Number of things in the output: %s" % len(tempOutput))
-
+            # outputList.append(output)
+            tempOutput.append(output)
+        #print("Number of things in the output: %s" % len(tempOutput))
+        #print(tempOutput)
+        output1 = sum(tempOutput)
 
 
         if (symmetry):
@@ -116,14 +124,14 @@ def makeMove(player, playerNet, game, symmetry, depth):
 
             playerNet.Flush()
             playerNet.Input(line)
-            playerNet.Activate()
-            playerNet.Activate()
-            playerNet.Activate()
+            [playerNet.Activate() for _ in range(repeats)]
             # output list is size 1
-            for output in playerNet.Output():
-                outputList.append(output)
-    # print(outputList)
+            output2 = sum(playerNet.Output())
+        outputList.append(min(output1,output2))
+    #print(outputList)
     # print(len(outputList))
+
+
 
     bestIndexSoFar = -1
     bestValueSoFar = 20
@@ -153,7 +161,7 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
     # build the NN for the individual that we are evaluating.
     p1Genome = popGenomeList[genomeNum]
     player1Net = NEAT.NeuralNetwork()
-    player1Net.SetInputOutputDimentions(2, 1)
+    player1Net.SetInputOutputDimentions(6*14, 10)
     if hyper:
         p1Genome.BuildHyperNEATPhenotype(player1Net,substrate)
     else:
@@ -185,7 +193,7 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         p2Genome = popGenomeList[i]
         # build opponent NN
         player2Net = NEAT.NeuralNetwork()
-        player2Net.SetInputOutputDimentions(2, 1)
+        player2Net.SetInputOutputDimentions(6*14, 10)
         if hyper:
             p2Genome.BuildHyperNEATPhenotype(player2Net, substrate)
         else:
@@ -341,7 +349,11 @@ def configureSubstrate():
         for y in range(6):
             hiddenCoordinateList.append((x,y+6))
 
-    substrate = NEAT.Substrate(inputCoordinateList,hiddenCoordinateList,[(0,0)])
+    outputCoordinatesList = []
+    for x in range(5):
+        outputCoordinatesList.append((x,0));
+
+    substrate = NEAT.Substrate(inputCoordinateList,hiddenCoordinateList,outputCoordinatesList)
     substrate.m_allow_input_hidden_links = True
     substrate.m_allow_input_output_links = True #do we really want this true
     substrate.m_allow_hidden_hidden_links = False
@@ -387,8 +399,8 @@ def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper, 
 def main():
     GLOBAL_DEPTH = 1
 
-    if (len(sys.argv) < 4):
-        print("Six command line arguments expected.")
+    if (len(sys.argv) < 6):
+        print("Two command line arguments expected.")
         print("output file")
         print("0 for no symmetry, 1 for symmetry")
         print("0 to silence games, 1 to view games")
@@ -412,12 +424,12 @@ def main():
         f.write("symmetry: " + str(bool(symmetry)) + "\n")
         f.write("HyperNEAT: " + str(bool(hyper)) + "\n")
         f.write("Gen | Min | Avg | Max | RunTime\n")
-    print("done saving ")
 
     if hyper:
         genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
                       False, NEAT.ActivationFunction.UNSIGNED_SIGMOID, NEAT.ActivationFunction.UNSIGNED_SIGMOID,
                       0, params)
+
     else:
         genome = NEAT.Genome(0, 14 * 6, 0, 1, False, NEAT.ActivationFunction.UNSIGNED_SIGMOID,
                         NEAT.ActivationFunction.UNSIGNED_SIGMOID, 0, params)
@@ -436,16 +448,16 @@ def main():
                 gameMatrix[i].append(False)
             gamesSoFar.append([0,0,0])
 
-        # for i in range(params.PopulationSize):
-        #     if sum(gamesSoFar[i]) < 10:
-        #         # genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmetry, hyper
-        #         evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry, False)
-        # print(gamesSoFar)
-        #
-        # for i in range(params.PopulationSize):
-        #     games = sum(gamesSoFar[i])
-        #     fitness = (gamesSoFar[i][0] + gamesSoFar[i][1] * .5) / games
-        #     NEAT.GetGenomeList(pop1)[i].SetFitness(fitness)
+        ### individuals playing each other ###
+        for i in range(params.PopulationSize):
+            if sum(gamesSoFar[i]) < 10:
+                evaluate(i, NEAT.GetGenomeList(pop1), gameMatrix, gamesSoFar, substrate, symmetry, False, GLOBAL_DEPTH)
+
+        ### assign fitnesses based on the game that they played with each other
+        for genome in NEAT.GetGenomeList(pop1):
+            games = sum(gamesSoFar[i])
+            fitness = (gamesSoFar[i][0] + gamesSoFar[i][1] * .5) / (games*1.0)
+            genome.SetFitness(fitness)
 
         stringToWrite = str(generation) + ','
         ### players that go on the leftmost available column ###
@@ -466,9 +478,10 @@ def main():
         #     fitnesses.append(leftWins)
         #     genome.SetFitness(leftWins)
 
-
         ### players that go in random columns ###
-        fitnesses = []
+        coFitnesses = []
+        randFitnesses = []
+        totalFitnesses = []
         for genome in NEAT.GetGenomeList(pop1):
             randomWins = 0
             # Playing games against random players
@@ -484,14 +497,23 @@ def main():
                 elif winner2 == 3:
                     randomWins += .5
 
-            fitness = randomWins
-            # fitness = leftWins
-            fitnesses.append(fitness)
-            genome.SetFitness(fitness)
+            # At this point, each genome has a fitness that's been assigned from
+            #  playing others in the population. Get it, and alter it.
+            coFitness = genome.GetFitness()
+            randFitness = randomWins/20.0
+            randomWeight = .96**generation
+
+            coFitnesses.append(coFitness)
+            randFitnesses.append(randFitness)
+            totalFitnesses.append(genome.GetFitness() + (randomWins / 20.0))
+            genome.SetFitness(genome.GetFitness()*(1-randomWeight) + (randomWins / 20.0)*randomWeight)
+
+        # fitness assignment for every individual is complete. Gather it for
+        #  analytics
 
         pop1.Epoch()
         end = time.time()
-        stringToWrite = stringToWrite + str(min(fitnesses)) + ',' + str(sum(fitnesses) / len(fitnesses)) + ',' + str(max(fitnesses)) + ',' + str(end - begin) + '\n'
+        stringToWrite = stringToWrite + "randMin:"+str(min(randFitnesses)) + ', randAvg:' + str(sum(randFitnesses) / len(randFitnesses)) + ', randMax:' + str(max(randFitnesses)) + ', totalMax:' + str(max(totalFitnesses)) + '\n'
         with open(output_file, "a") as f:
             f.write(stringToWrite)
         print(stringToWrite)
@@ -506,16 +528,6 @@ def test():
     params = configureParams()
     with open('genome.txt', 'r') as f:
         mygenome = pickle.load(f)
-    play(mygenome, "Human", substrate, False, True, False, GLOBAL_DEPTH)
-def test(genomes_file):
-    for i in range(25):
-        test(genomes_file, i)
-def test(genomes_file, genome_number):
-    substrate = configureSubstrate()
-    params = configureParams()
-    with open(genomes_file, 'r') as f:
-        genomes_list = pickle.load(f)
-        mygenome = genomes_list[genome_number]
     play(mygenome, "Human", substrate, False, True, False, GLOBAL_DEPTH)
 main()
 # test()
