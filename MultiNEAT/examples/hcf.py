@@ -508,16 +508,5 @@ def test():
     with open('genome.txt', 'r') as f:
         mygenome = pickle.load(f)
     play(mygenome, "Human", substrate, False, True, False, GLOBAL_DEPTH)
-def test(genomes_file):
-    for i in range(25):
-        test(genomes_file, i)
-def test(genomes_file, genome_number):
-    substrate = configureSubstrate()
-    params = configureParams()
-    with open(genomes_file, 'r') as f:
-        genomes_list = pickle.load(f)
-        mygenome = genomes_list[genome_number]
-    play(mygenome, "Human", substrate, False, True, False, GLOBAL_DEPTH)
-
 main()
 # test()
