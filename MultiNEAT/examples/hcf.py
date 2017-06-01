@@ -18,7 +18,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 # sys.path.insert(0, '/Accounts/kimj4/CS361Final')
 # sys.path.insert(0, '/accounts/sharpeg/CS361Final')
 # sys.path.insert(0, '/home/ubuntu/CS361Final')
-sys.path.insert(0, '/home/juyun/CS361Final')
+#sys.path.insert(0, '/home/juyun/CS361Final')
+sys.path.insert(0, '/home/test/CS361Final')
 import MultiNEAT as NEAT
 from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, EvaluateGenomeList_Parallel
 
