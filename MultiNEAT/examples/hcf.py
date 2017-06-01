@@ -25,7 +25,7 @@ from MultiNEAT import GetGenomeList, ZipFitness, EvaluateGenomeList_Serial, Eval
 import ConnectFour2
 from ConnectFour2 import Game, GameTree, PossibleMove, printGame, vectorPrint, printInputMatrix
 
-def play(player1, player2, substrate, symmetry, printing, hyper):
+def play(player1, player2, substrate, symmetry, printing, hyper, depth):
     game = Game()
     if isinstance(player1, NEAT.Genome):
         player1Net = NEAT.NeuralNetwork()
@@ -68,9 +68,9 @@ def play(player1, player2, substrate, symmetry, printing, hyper):
                     break
         else:
             if curPlayer == 1:
-                makeMove(1,player1Net,game,symmetry)
+                makeMove(1,player1Net,game,symmetry, depth)
             else:
-                makeMove(2,player2Net,game,symmetry)
+                makeMove(2,player2Net,game,symmetry, depth)
         outcome = game.evaluate()
         curPlayer = 3 - curPlayer
         numMoves += 1
@@ -81,13 +81,13 @@ def play(player1, player2, substrate, symmetry, printing, hyper):
             break
     return winner
 
-def makeMove(player, playerNet, game, symmetry):
+def makeMove(player, playerNet, game, symmetry, depth):
     ''' Analyzes the game tree to a certain depth, feeds those trees as input to
     the NN, and makes the move depending on what it thought each outcome was
     worth.
     TODO: add different workings for using symmetry
     '''
-    gameTree = GameTree(1, game, player)
+    gameTree = GameTree(depth, game, player)
     outputList = []
     repeats = 5
     for i in range(gameTree.length()):
@@ -148,7 +148,8 @@ def findBestIndividual(pop):
             bestGenome = genome
     return genome
 
-def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmetry, hyper):
+def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmetry, hyper, depth):
+
     # build the NN for the individual that we are evaluating.
     p1Genome = popGenomeList[genomeNum]
     player1Net = NEAT.NeuralNetwork()
@@ -190,8 +191,8 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         else:
             p2Genome.BuildPhenotype(player2Net)
 
-        winner1 = play(p1Genome, p2Genome, substrate, symmetry, False, False)
-        winner2 = play(p2Genome, p1Genome, substrate, symmetry, False, False)
+        winner1 = play(p1Genome, p2Genome, substrate, symmetry, False, False, depth)
+        winner2 = play(p2Genome, p1Genome, substrate, symmetry, False, False, depth)
 
         p1wins,p2wins,ties = 0,0,0
         if winner1 == 1:
@@ -220,10 +221,10 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         gamesSoFar[i][2]+=p1wins
 
     #then play random 4 times
-    winner1 = play(p1Genome, "Random", substrate, symmetry, False, False)
-    winner2 = play("Random", p1Genome, substrate, symmetry, False, False)
-    winner3 = play(p1Genome, "Random", substrate, symmetry, False, False)
-    winner4 = play("Random", p1Genome, substrate, symmetry, False, False)
+    winner1 = play(p1Genome, "Random", substrate, symmetry, False, False, depth)
+    winner2 = play("Random", p1Genome, substrate, symmetry, False, False, depth)
+    winner3 = play(p1Genome, "Random", substrate, symmetry, False, False, depth)
+    winner4 = play("Random", p1Genome, substrate, symmetry, False, False, depth)
 
     p1wins,p2wins,ties = 0,0,0
     if winner1 == 1:
@@ -360,7 +361,7 @@ def configureSubstrate():
     # substrate.m_max_weight_and_bias = 8.0
     return substrate
 
-def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper):
+def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper, depth):
     ''' Evaluates every individual against numCycles * 2 number of random
     players. Each cycle contains 2 games where each player get to go first.
     '''
@@ -369,8 +370,8 @@ def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper):
         randomWins = 0
         # Playing games against random players
         for j in range(10):
-            winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
-            winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
+            winner1 = play("Random", genome, substrate, symmetry, printGames, hyper, depth)
+            winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper, depth)
             if winner1 == 2:
                 randomWins += 1
             elif winner1 == 3:
@@ -384,6 +385,7 @@ def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper):
 
 
 def main():
+    GLOBAL_DEPTH = 2
 
     if (len(sys.argv) < 4):
         print("Two command line arguments expected.")
@@ -471,8 +473,8 @@ def main():
             randomWins = 0
             # Playing games against random players
             for j in range(10):
-                winner1 = play("Random", genome, substrate, symmetry, printGames, hyper)
-                winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper)
+                winner1 = play("Random", genome, substrate, symmetry, printGames, hyper, GLOBAL_DEPTH)
+                winner2 = play(genome, "Random", substrate, symmetry, printGames, hyper, GLOBAL_DEPTH)
                 if winner1 == 2:
                     randomWins += 1
                 elif winner1 == 3:
@@ -504,6 +506,6 @@ def test():
     params = configureParams()
     with open('genome.txt', 'r') as f:
         mygenome = pickle.load(f)
-    play(mygenome, "Human", substrate, False, True, False)
+    play(mygenome, "Human", substrate, False, True, False, GLOBAL_DEPTH)
 main()
 # test()
