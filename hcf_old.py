@@ -309,24 +309,6 @@ def configureParams():
     params.ActivationFunction_Relu_Prob = 1.0;
     params.ActivationFunction_Softplus_Prob = 1.0;
 
-    #
-    # params.ActivationFunction_SignedSigmoid_Prob = 0.0
-    # params.ActivationFunction_UnsignedSigmoid_Prob = 1.0
-    # params.ActivationFunction_Tanh_Prob = 0.0
-    # params.ActivationFunction_TanhCubic_Prob = 0.0
-    # params.ActivationFunction_SignedStep_Prob = 0.0
-    # params.ActivationFunction_UnsignedStep_Prob = 0.0
-    # params.ActivationFunction_SignedGauss_Prob = 0.0
-    # params.ActivationFunction_UnsignedGauss_Prob = 1.0
-    # params.ActivationFunction_Abs_Prob = 0.0
-    # params.ActivationFunction_SignedSine_Prob = 0.0
-    # params.ActivationFunction_UnsignedSine_Prob = 1.0
-    # params.ActivationFunction_Linear_Prob = 1.0
-    # params.ActivationFunction_SignedSigmoid_Prob = 0.0
-    # params.ActivationFunction_UnsignedSigmoid_Prob = 1.0
-    # params.ActivationFunction_Tanh_Prob = 0.0
-    # params.ActivationFunction_SignedStep_Prob = 0.0
-
     params.AllowLoops = False
     return params
 
