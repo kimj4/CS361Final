@@ -376,7 +376,7 @@ def main():
     output_file = sys.argv[1]
     symmetry = int(sys.argv[2])
     printGames = int(sys.argv[3])
-    symmetry = int(sys.argv[4])
+    hyper = int(sys.argv[4])
     genome_save_point = sys.argv[5]
     genome_save_generation = int(sys.argv[6])
 
