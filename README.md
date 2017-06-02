@@ -57,20 +57,20 @@ and then:
 python hcf.py output.txt 0 0 0 genome.txt 19
 ```
 arguments:
-> file to log to
-> enable/disable symmetry
-> enable/disable verbose printing
-> enable/disable HyperNEAT
-> file to save population to
-> generation at which to save population
+- file to log to
+- enable/disable symmetry
+- enable/disable verbose printing
+- enable/disable HyperNEAT
+- file to save population to
+- generation at which to save population
 
 To play games on saved populations:
 ```shell
 python playGame.py Players/NEAT_No_Symmetry_genome.txt 0 0 0 0
 ```
 arguments:
-> file where player list is saved
-> index of player in list to play
-> 1 if you want to go first, 0 if you don't
-> 1 if player used symmetry 0 if not
-> 1 if player used HyperNEAT 0 if NEAT
+- file where player list is saved
+- index of player in list to play
+- 1 if you want to go first, 0 if you don't
+- 1 if player used symmetry 0 if not
+- 1 if player used HyperNEAT 0 if NEAT
