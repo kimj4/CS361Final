@@ -228,44 +228,6 @@ def evaluate(genomeNum, popGenomeList, gameMatrix, gamesSoFar, substrate, symmet
         gamesSoFar[i][1]+=ties
         gamesSoFar[i][2]+=p1wins
 
-    #then play random 4 times
-    winner1 = play(p1Genome, "Random", substrate, symmetry, False, False, depth)
-    winner2 = play("Random", p1Genome, substrate, symmetry, False, False, depth)
-    winner3 = play(p1Genome, "Random", substrate, symmetry, False, False, depth)
-    winner4 = play("Random", p1Genome, substrate, symmetry, False, False, depth)
-
-    p1wins,p2wins,ties = 0,0,0
-    if winner1 == 1:
-        p1wins += 1
-    elif winner1 == 2:
-        p2wins += 1
-    else:
-        ties += 1
-
-    if winner2 == 1:
-        p2wins += 1
-    elif winner2 == 2:
-        p1wins += 1
-    else:
-        ties += 1
-
-    if winner3 == 1:
-        p1wins += 1
-    elif winner3 == 2:
-        p2wins += 1
-    else:
-        ties += 1
-
-    if winner4 == 1:
-        p2wins += 1
-    elif winner4 == 2:
-        p1wins += 1
-    else:
-        ties += 1
-
-    gamesSoFar[genomeNum][0]+=p1wins
-    gamesSoFar[genomeNum][1]+=ties
-    gamesSoFar[genomeNum][2]+=p2wins
 
 def configureParams():
     ''' Set the parameters that we need.
@@ -396,35 +358,32 @@ def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper, 
 
 
 
-def main():
+def runOneSim(hyper,printGames,symmetry):
     GLOBAL_DEPTH = 1
 
-    if (len(sys.argv) < 6):
-        print("Two command line arguments expected.")
-        print("output file")
-        print("0 for no symmetry, 1 for symmetry")
-        print("0 to silence games, 1 to view games")
-        print("0 for NEAT, 1 for HyperNEAT")
-        print("file to store the best individual in")
-        print("generation number at which the best individual is stored")
-        return
+    # if (len(sys.argv) < 6):
+    #     print("Two command line arguments expected.")
+    #     print("output file")
+    #     print("0 for no symmetry, 1 for symmetry")
+    #     print("0 to silence games, 1 to view games")
+    #     print("0 for NEAT, 1 for HyperNEAT")
+    #     print("file to store the best individual in")
+    #     print("generation number at which the best individual is stored")
+    #     return
 
     output_file = sys.argv[1]
-    symmetry = int(sys.argv[2])
-    printGames = int(sys.argv[3])
-    hyper = int(sys.argv[4])
-    genome_save_point = sys.argv[5]
-    genome_save_generation = int(sys.argv[6])
+    genome_save_point = sys.argv[2]
+    genome_save_generation = int(sys.argv[3])
 
     params = configureParams()
     substrate = configureSubstrate()
-    params.Save(output_file)
-    with open(output_file, "a") as f:
-        f.write("\nCommand line parameters\n")
-        f.write("symmetry: " + str(bool(symmetry)) + "\n")
-        f.write("HyperNEAT: " + str(bool(hyper)) + "\n")
-        f.write("Gen | Min | Avg | Max | RunTime\n")
-
+    params.Save(output_file+"params.txt")
+    with open(output_file+"data.csv", "a") as f:
+        # f.write("\nCommand line parameters\n")
+        # f.write("symmetry: " + str(bool(symmetry)) + "\n")
+        # f.write("HyperNEAT: " + str(bool(hyper)) + "\n")
+        # f.write("Gen | Min | Avg | Max | RunTime\n")
+        f.write("Hyper"+str(hyper)+" symmetry"+str(symmetry)+"\n")
     if hyper:
         genome = NEAT.Genome(0, substrate.GetMinCPPNInputs(), 0, substrate.GetMinCPPNOutputs(),
                       False, NEAT.ActivationFunction.UNSIGNED_SIGMOID, NEAT.ActivationFunction.UNSIGNED_SIGMOID,
@@ -436,7 +395,7 @@ def main():
 
     # use current time as the random seed
     pop1 = NEAT.Population(genome, params, True, 1.0, int(time.time()))
-    numGens = 100
+    numGens = 20
 
     for generation in range(numGens):
         begin = time.time()
@@ -514,15 +473,22 @@ def main():
         pop1.Epoch()
         end = time.time()
         stringToWrite = stringToWrite + "randMin:"+str(min(randFitnesses)) + ', randAvg:' + str(sum(randFitnesses) / len(randFitnesses)) + ', randMax:' + str(max(randFitnesses)) + ', totalMax:' + str(max(totalFitnesses)) + '\n'
+        stringToWrite2 = str(sum(randFitnesses) / len(randFitnesses))
         with open(output_file, "a") as f:
-            f.write(stringToWrite)
+            f.write(stringToWrite2)
         print(stringToWrite)
 
         # at the point where the genomes should be saved, save the whole population
-        if (generation == genome_save_point):
+        if (generation == genome_save_generation):
             with open(genome_save_point, 'w') as f:
                 pickle.dump(NEAT.GetGenomeList(pop1), f)
 
+def main():
+    for hyper in [0,1]:
+        for symmetry in [0,1]:
+            for run in range(3):
+                print("running hyper"+str(hyper)+" symmetry"+str(symmetry)+" run"+str(run))
+                runOneSim(hyper, 0, symmetry)
 
 def test():
     substrate = configureSubstrate()
