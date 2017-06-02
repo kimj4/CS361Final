@@ -467,6 +467,7 @@ def runOneSim(hyper,printGames,symmetry):
             totalFitnesses.append(genome.GetFitness() + (randomWins / 20.0))
             genome.SetFitness(genome.GetFitness()*(1-randomWeight) + (randomWins / 20.0)*randomWeight)
 
+        gc.collect()
         # fitness assignment for every individual is complete. Gather it for
         #  analytics
 
@@ -489,6 +490,9 @@ def main():
             for run in range(3):
                 print("running hyper"+str(hyper)+" symmetry"+str(symmetry)+" run"+str(run))
                 runOneSim(hyper, 0, symmetry)
+                gc.collect()
+            gc.collect()
+        gc.collect()
 
 def test():
     substrate = configureSubstrate()
