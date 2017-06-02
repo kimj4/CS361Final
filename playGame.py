@@ -7,8 +7,9 @@ def playPlayers(playersFile, playerIndex, goFirst, symmetry, hyper):
     substrate = hcf.configureSubstrate
     with open(playersFile, 'r') as f:
         listOfPlayers = pickle.load(f)
+    print(goFirst)
     if goFirst:
-        hcf.play(listOfPlayers[playerIndex], "Human", substrate, False, True, False, GLOBAL_DEPTH)
+        hcf.play("Human", listOfPlayers[playerIndex], substrate, False, True, False, GLOBAL_DEPTH)
     else:
         hcf.play(listOfPlayers[playerIndex], "Human", substrate, False, True, False, GLOBAL_DEPTH)
 
