@@ -1,3 +1,0 @@
-why might HyperNEAT gives us the same function?
-    in test code, activation is called repeatedly
-    number of times relevant when there is a cycle in the NN
