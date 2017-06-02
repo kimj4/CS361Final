@@ -27,3 +27,5 @@ def main():
     hyper = sys.argv[4]
 
     playPlayers(playersFile, playerIndex, goFirst, symmetry, hyper)
+
+main()
