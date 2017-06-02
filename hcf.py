@@ -481,7 +481,7 @@ def runOneSim(hyper,printGames,symmetry):
 
         # at the point where the genomes should be saved, save the whole population
         if (generation == genome_save_generation):
-            with open(genome_save_point, 'w') as f:
+            with open(genome_save_point+str(hyper)+str(symmetry)+".txt", 'w') as f:
                 pickle.dump(NEAT.GetGenomeList(pop1), f)
 
 def main():
