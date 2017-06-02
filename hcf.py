@@ -11,6 +11,7 @@ import time
 import random as rnd
 import subprocess as comm
 import pickle
+import gc
 # import Random
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
