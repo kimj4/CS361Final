@@ -359,22 +359,26 @@ def evaluatePopulationAgainstRandom(pop, numCycles, substrate, symmetry, hyper, 
 
 
 
-def runOneSim(hyper,printGames,symmetry):
+# def runOneSim(hyper,printGames,symmetry):
+def main():
     GLOBAL_DEPTH = 1
 
-    # if (len(sys.argv) < 6):
-    #     print("Two command line arguments expected.")
-    #     print("output file")
-    #     print("0 for no symmetry, 1 for symmetry")
-    #     print("0 to silence games, 1 to view games")
-    #     print("0 for NEAT, 1 for HyperNEAT")
-    #     print("file to store the best individual in")
-    #     print("generation number at which the best individual is stored")
-    #     return
+    if (len(sys.argv) < 6):
+        print("Two command line arguments expected.")
+        print("output file")
+        print("0 for no symmetry, 1 for symmetry")
+        print("0 to silence games, 1 to view games")
+        print("0 for NEAT, 1 for HyperNEAT")
+        print("file to store the best individual in")
+        print("generation number at which the best individual is stored")
+        return
 
     output_file = sys.argv[1]
-    genome_save_point = sys.argv[2]
-    genome_save_generation = int(sys.argv[3])
+    symmetry = int(sys.argv[2])
+    printGames = int(sys.argv[3])
+    symmetry = int(sys.argv[4])
+    genome_save_point = sys.argv[5]
+    genome_save_generation = int(sys.argv[6])
 
     params = configureParams()
     substrate = configureSubstrate()
@@ -485,15 +489,15 @@ def runOneSim(hyper,printGames,symmetry):
             with open(genome_save_point+str(hyper)+str(symmetry)+".txt", 'w') as f:
                 pickle.dump(NEAT.GetGenomeList(pop1), f)
 
-def main():
-    for hyper in [0,1]:
-        for symmetry in [0,1]:
-            for run in range(3):
-                print("running hyper"+str(hyper)+" symmetry"+str(symmetry)+" run"+str(run))
-                runOneSim(hyper, 0, symmetry)
-                gc.collect()
-            gc.collect()
-        gc.collect()
+# def main():
+#     for hyper in [0,1]:
+#         for symmetry in [0,1]:
+#             for run in range(3):
+#                 print("running hyper"+str(hyper)+" symmetry"+str(symmetry)+" run"+str(run))
+#                 runOneSim(hyper, 0, symmetry)
+#                 gc.collect()
+#             gc.collect()
+#         gc.collect()
 
 def test():
     substrate = configureSubstrate()
