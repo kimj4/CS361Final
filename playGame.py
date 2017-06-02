@@ -7,13 +7,14 @@ def playPlayers(playersFile, playerIndex, goFirst, symmetry, hyper):
     substrate = hcf.configureSubstrate
     with open(playersFile, 'r') as f:
         listOfPlayers = pickle.load(f)
+    print(goFirst)
     if goFirst:
         hcf.play("Human", listOfPlayers[playerIndex], substrate, False, True, False, GLOBAL_DEPTH)
     else:
         hcf.play(listOfPlayers[playerIndex], "Human", substrate, False, True, False, GLOBAL_DEPTH)
 
 def main():
-    if (len(sys.argv) < 6):
+    if (len(sys.argv) < 5):
         print("Arguments expected")
         print("path to file containing players")
         print("the index of player you want to play in the list of players")
