@@ -460,4 +460,5 @@ def main():
             with open(genome_save_point, 'w') as f:
                 pickle.dump(NEAT.GetGenomeList(pop1), f)
 
-main()
+if (__name__ == '__main__'):
+    main()
