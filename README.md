@@ -1,3 +1,6 @@
+The latest version of the code can be found at https://github.com/kimj4/CS361Final
+
+
 Tested on a Ubuntu 17 VM on VirtualBox
 
 First, pull the git repository
