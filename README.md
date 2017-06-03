@@ -1,16 +1,18 @@
 Tested on a Ubuntu 17 VM on VirtualBox
 
-pull git repo
+First, pull the git repository
 
-install Boost
-- download boost
-	- https://dl.bintray.com/boostorg/release/1.64.0/source/:boost_1_64_0.tar.gz
+The project and MultiNEAT depends on Boost. Install it.
+- download boost: https://dl.bintray.com/boostorg/release/1.64.0/source/:boost_1_64_0.tar.gz
 - unpack into some directory
-- get required libraries
+
+
+Before you install, get required libraries:
 ```shell
-	sudo apt-get install build-essential g++ python-dev autotools-dev libicu-dev build-essential libbz2-dev
+sudo apt-get install build-essential g++ python-dev autotools-dev libicu-dev build-essential libbz2-dev
 ```
-- cd into boost directory
+
+cd into boost directory you unpacked then:
 ```shell
 ./bootstrap.sh --prefix=/usr/local
 n=`cat /proc/cpuinfo | grep "cpu cores" | uniq | awk '{print $NF}'`
@@ -19,38 +21,44 @@ sudo sh -c 'echo "/usr/local/lib" >> /etc/ld.so.conf.d/local.conf'
 sudo ldconfig
 ```
 
-install MultiNEAT
-- cd into CS361Final/MultiNEAT
+
+When you have Boost installed, install MultiNEAT:
+cd into CS361Final/MultiNEAT
 ```shell
 sudo python setup.py install
 ```
-if you need setuptools:
+
+If the installation fails because you need setuptools:
 ```shell
 pip install setuptools
 ```
 
-if you need pip:
+If it tells you that you don't have pip:
 ```shell
 sudo apt-get install python-pip
 ```
 
-build connect four
+
+Once you have MultiNEAT installed, you need to build the game. It needs to be built into a .so library. Run the command by doing:
 ```shell
 ./cbuild.sh
 ```
+If your terminal doesn't let you do this, run:
+```shell
+chmod +x cbuild.sh
+```
 
-if you need clang++:
+If your terminal says that you don't have clang++, install it by:
 ```shell
 sudo apt-get install clang
 ```
 
-if you need concurrent.futures
+If terminal says you need concurrent.futures:
 ```shell
 pip install futures
 ```
 
-run program
-go into hcf.py, and change sys.path.insert(0, '/path/to/directory/that/contains/MultiNEAT/')
+To run the program, go into the source code of hcf.py, and change sys.path.insert(0, '/path/to/directory/that/contains/MultiNEAT/') towards the top of the file. 
 
 and then:
 ```shell
